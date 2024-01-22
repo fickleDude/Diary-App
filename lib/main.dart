@@ -1,8 +1,13 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'login_page.dart';
 
-void main() {
+void main() async {
+  // initialize firebase
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp().then((value)
+    => print(value.options.projectId));
   runApp(MyApp());
 }
 
@@ -35,5 +40,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 
 
