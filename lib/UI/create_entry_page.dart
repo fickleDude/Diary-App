@@ -29,6 +29,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
   TextEditingController titleController = TextEditingController();
   TextEditingController contentController = TextEditingController();
 
+  TimeOfDay selectedTime = TimeOfDay.now();
 
   @override
   void initState() {
@@ -43,12 +44,14 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
   }
 
   Future<void> _saveEntry(TimeOfDay time) async {
+    //get stored file
     String fileName = 'diary_entries_${widget.username}.txt';
     final file = await _localFile(fileName);
     print(time);
+    //retrieve data from text fields
     String entryTitle = titleController.text;
     String entryContent = contentController.text;
-
+    // write new content to file
     await file.writeAsString('$entryTitle\n$entryContent\n${time.hour}\n${time.minute}\n\n', mode: FileMode.append);
 
     // Pass entry data back to the previous screen
@@ -56,11 +59,13 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
     Navigator.pop(context);
   }
 
+  //to get stored file
   Future<File> _localFile(String fileName) async {
     final path = await getApplicationDocumentsDirectory();
     return File('${path.path}/$fileName');
   }
-  TimeOfDay selectedTime = TimeOfDay.now();
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
