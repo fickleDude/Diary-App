@@ -1,22 +1,15 @@
-# diary
+# DAILY TRACKS
+This app helps users to set and track personal, professional, or academic goals.  
 
-diary_entry.dart: файл с сущностью дневника, содержит id записи, имя автора, дату и время написания, содержание
-database_helper.dart: создаем класс для обращения к БД: подключиться, инициализировать БД, получить list сущностей,
-вставить сущность
-create_entry_page.dart: класс добавления сущности, содержит два контроллера, которые обрабатывают введенные данные,
-состояние - содержание текстовых полей, содержит метод создания файла и сохранения в него инфы
+### Problem:   
+Many individuals struggle with organization, time management, and tracking their personal growth and daily activities.  
+### Target Audience:   
+This app is designed for students, working professionals, entrepreneurs, and individuals focused on personal development.  
+### Solution:   
+Daily tracks provides a digital platform for users to set goals, organize their schedules, reflect on their progress, and track their habits.  
 
-SharedPreferences навигация
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### App main features:
+- Goal setting and tracking
+- Time management tools
+- Productivity tracking and reflection prompts
+- Habit tracking and analysis
