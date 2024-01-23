@@ -1,3 +1,4 @@
+import 'package:diary/UI/note_list_page.dart';
 import 'package:flutter/material.dart';
 import 'diary_page.dart';
 
@@ -45,7 +46,8 @@ class _LoginPageState extends State<LoginPage> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DiaryPage(username: _usernameController.text),
+                      // builder: (context) => DiaryPage(username: _usernameController.text),
+                      builder: (context) => NoteListPage(username: _usernameController.text),
                     ),
                   );
                 },
