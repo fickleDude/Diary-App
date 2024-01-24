@@ -1,10 +1,7 @@
-
-
 import 'package:diary/UI/note_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'create_entry_page.dart';
 import 'login_page.dart';
 
@@ -27,7 +24,6 @@ class _NoteListPageState extends State<NoteListPage> {
   void initState() {
     super.initState();
     _initSharedPreferences();
-    entries.forEach((element) {print(element);});
   }
 
   Future<void> _initSharedPreferences() async {
@@ -35,11 +31,24 @@ class _NoteListPageState extends State<NoteListPage> {
     _loadEntries();
   }
 
+  int _noteSort(String note1, String note2){
+    bool isPinned1 = note1.split('\n')[4] == "false" ? false : true;
+    bool isPinned2 = note2.split('\n')[4] == "false" ? false : true;
+    if(isPinned1 && !isPinned2){
+      return -1;
+    }else if(!isPinned1 && isPinned2){
+      return 1;
+    }else{
+      return 0;
+    }
+  }
+
   Future<void> _loadEntries() async {
     List<String>? storedEntries = _prefs.getStringList('${widget.username}_entries');
     if (storedEntries != null) {
       setState(() {
         entries = storedEntries;
+        entries.sort(_noteSort);
       });
     }
   }
@@ -58,7 +67,7 @@ class _NoteListPageState extends State<NoteListPage> {
   }
 
   void _handleEntrySaved(String title, String content, String time_hour, String time_min) {
-    String entry = '$title\n$content\n$time_hour\n$time_min\n';
+    String entry = '$title\n$content\n$time_hour\n$time_min\nfalse\n';
     if (!entries.contains(entry)) {
       setState(() {
         entries.add(entry);
@@ -72,208 +81,145 @@ class _NoteListPageState extends State<NoteListPage> {
     return MaterialApp(
         navigatorKey: navigatorKey,
         home: Scaffold(
-        appBar: AppBar(
-          title: Text('ALL NOTES', style: TextStyle(
-          color: Colors.black,
-          fontSize: 24,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.bold,
-          height: 0,
-          letterSpacing: 0.30,
-        ),),
-          actions: [
-      IconButton(
-      icon: Icon(Icons.logout),
-      onPressed: _logout,
-      ),
-    ],
-          backgroundColor: Color(0xB2E8E4E7),
-    ),
-        body: Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage("assets/background/notes_list.jpg"),
-                  fit: BoxFit.cover,
+            appBar: AppBar(
+              title: Text('ALL NOTES', style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.bold,
+                height: 0,
+                letterSpacing: 0.30,
+              ),),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.logout),
+                  onPressed: _logout,
                 ),
-              ),
+              ],
+              backgroundColor: Color(0xB2E8E4E7),
             ),
-            Scaffold(
-               backgroundColor: Colors.transparent,
-               body: Container(
-                 width: double.infinity,
-                 height: double.infinity,
-                 child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(height: 20,),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              checkRemindersButton(),
-                              SizedBox(width: 40,),
-                              addNoteButton(),
-                            ],
-                          ),
-                          SizedBox(height: 10,),
-                          drawNotesList()
-                        ],
-                      ),
-               ),
-             ),
-          ],
+            body: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage("assets/background/notes_list.jpg"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: 20,),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            checkRemindersButton(),
+                            SizedBox(width: 40,),
+                            addNoteButton(),
+                          ],
+                        ),
+                        SizedBox(height: 10,),
+                        drawNotesList()
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
         )
-      )
     );
   }
 
   Widget drawNotesList(){
     return Expanded(
       child: ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: entries.length,
-            itemBuilder: (BuildContext context, int index) {
-              List<String> entryLines = entries[index].split('\n');
-              String entryTitle = entryLines[0];
-              String entryContent = entryLines[1];
-              String entryTimeHour = entryLines[2];
-              String entryTimeMin = entryLines.sublist(3).join('\n');
-              return drawNote(index, entryTitle, entryContent, entryTimeHour, entryTimeMin);
-            }
-        ),
+          padding: const EdgeInsets.all(8),
+          itemCount: entries.length,
+          itemBuilder: (BuildContext context, int index) {
+            List<String> entryLines = entries[index].split('\n');
+            String entryTitle = entryLines[0];
+            String entryContent = entryLines[1];
+            String entryTimeHour = entryLines[2];
+            String entryTimeMin = entryLines[3];
+            String entryIsPinned = entryLines[4];
+            return drawNote(index, entryTitle, entryContent, entryTimeHour, entryTimeMin, entryIsPinned);
+          }
+      ),
     );
   }
 
-  // Widget drawNote(String title, String note){
-  //   return Container(
-  //     margin: EdgeInsets.only(left: 8, right: 8, top: 40, bottom: 20),
-  //     width: 338,
-  //     height: 200,
-  //     padding: const EdgeInsets.all(15),
-  //     decoration: ShapeDecoration(
-  //       color: Color(0xB2BB9AA0),
-  //       shape: RoundedRectangleBorder(
-  //         borderRadius: BorderRadius.circular(30),
-  //       ),
-  //     ),
-  //     child: Column(
-  //   mainAxisSize: MainAxisSize.min,
-  //   mainAxisAlignment: MainAxisAlignment.start,
-  //   crossAxisAlignment: CrossAxisAlignment.center,
-  //   children: [
-  //       Container(
-  //       width: 308,
-  //       height: 40,
-  //       padding: const EdgeInsets.all(10),
-  //       decoration: ShapeDecoration(
-  //         color: Color(0xB2E8E4E7),
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(30),
-  //         ),
-  //       ),
-  //         child: Row(
-  //           mainAxisAlignment: MainAxisAlignment.start,
-  //           crossAxisAlignment: CrossAxisAlignment.center,
-  //           mainAxisSize: MainAxisSize.max,
-  //           children: [
-  //             Text(
-  //               'THE TOTORO NOTE',
-  //               textAlign: TextAlign.center,
-  //               style: TextStyle(
-  //                 color: Colors.black,
-  //                 fontSize: 14,
-  //                 fontFamily: 'Inter',
-  //                 fontWeight: FontWeight.w400,
-  //                 height: 0,
-  //                 letterSpacing: 0.30,
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //     ),
-  //       const SizedBox(height: 10),
-  //       SizedBox(
-  //         width: 300,
-  //         height: 50,
-  //         child: Text(
-  //           'I Thought I Saw Satski And Mei Smiling At Us From Up In That Tree. Try Laughing. Then Whatever Scares You Will Go Away. ',
-  //           style: TextStyle(
-  //             color: Colors.black,
-  //             fontSize: 14,
-  //             fontFamily: 'Inter',
-  //             fontWeight: FontWeight.w400,
-  //             height: 0,
-  //             letterSpacing: 0.30,
-  //           ),
-  //         ),
-  //       ),
-  //       SizedBox(height: 11,),
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.end,
-  //         children: [
-  //           deleteButton(),
-  //           SizedBox(width: 10,),
-  //           pinButton()
-  //         ],
-  //       )
-  //       // IconButton(
-  //       //   icon: Icon(Icons.delete),
-  //       //   onPressed: () => null,
-  //       //   style: ButtonStyle.,
-  //       // ),
-  //       ],
-  //       )
-  //
-  //     );
-  // }
 
-  Widget drawNote(int index, String title, String note, String time_in_hours, String time_in_minutes){
+  Widget drawNote(int index, String title, String note, String hours, String minutes, String isPinned){
     return InkWell(
       onTap: (){
         navigatorKey.currentState?.pushReplacement(
           MaterialPageRoute(
             builder: (context) => NotePage(username: widget.username, title: title,note: note,
-              time_in_hours : time_in_hours,
-              time_in_minutes: time_in_minutes,),
+              hours : hours,
+              minutes: minutes),
           ),
         );
       },
       child: Container(
-        margin: EdgeInsets.only(left: 8, right: 8, top: 40, bottom: 20),
-        width: 338,
-        height: 200,
-        padding: const EdgeInsets.all(15),
-        decoration: ShapeDecoration(
-          color: Color(0xB2BB9AA0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        child: Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-          Container(
-          width: 308,
-          height: 40,
-          padding: const EdgeInsets.all(10),
+          margin: EdgeInsets.only(left: 8, right: 8, top: 40, bottom: 20),
+          width: 338,
+          height: 200,
+          padding: const EdgeInsets.all(15),
           decoration: ShapeDecoration(
-            color: Color(0xB2E8E4E7),
+            color:  isPinned == "false" ? Color(0xB2BB9AA0) : Color(0xFFB8A8C2),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
           ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 308,
+                height: 40,
+                padding: const EdgeInsets.all(10),
+                decoration: ShapeDecoration(
+                  color: Color(0xB2E8E4E7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w400,
+                        height: 0,
+                        letterSpacing: 0.30,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: 300,
+                height: 50,
+                child: Text(
+                  note.length > 100 ? note.replaceRange(100, note.length, '...') : note,
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 14,
@@ -283,38 +229,20 @@ class _NoteListPageState extends State<NoteListPage> {
                     letterSpacing: 0.30,
                   ),
                 ),
-              ],
-            ),
-        ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: 300,
-            height: 50,
-            child: Text(
-              note.length > 100 ? note.replaceRange(100, note.length, '...') : note,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                height: 0,
-                letterSpacing: 0.30,
               ),
-            ),
-          ),
-          SizedBox(height: 11,),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              deleteButton(index),
-              SizedBox(width: 10,),
-              pinButton(index)
+              SizedBox(height: 11,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  deleteButton(index),
+                  SizedBox(width: 10,),
+                  pinButton(index)
+                ],
+              )
             ],
           )
-          ],
-          )
 
-        ),
+      ),
     );
   }
 
@@ -354,17 +282,15 @@ class _NoteListPageState extends State<NoteListPage> {
           String entryContent = entryLines[1];
           String entryTimeHour = entryLines[2];
           String entryTimeMin = entryLines[3];
-
-          bool isPinned = _prefs.getBool('${widget.username}_entry_$index') ?? false;
-
-          // Toggle the pinned status
-          isPinned = !isPinned;
-
-          _prefs.setBool('${widget.username}_entry_$index', isPinned);
+          String entryIsPinned = entryLines[4];
+          //_prefs.setBool('${widget.username}_entry_$index', entryIsPinned == "false" ? true : false);
 
           setState(() {
             // Update the UI to reflect the change in pinned status
-            entries[index] = '$entryTitle\n$entryContent\n${entryTimeHour}\n${entryTimeMin}\nPinned: $isPinned';
+            entries[index] = '$entryTitle\n$entryContent\n${entryTimeHour}\n${entryTimeMin}'
+                '\n${entryIsPinned == "false" ? "true" : "false"}\n';
+            _prefs.setStringList('${widget.username}_entries', entries);
+            entries.sort(_noteSort);
           });
         },
       ),

@@ -52,7 +52,7 @@ class _CreateEntryPageState extends State<CreateEntryPage> {
     String entryTitle = titleController.text;
     String entryContent = contentController.text;
     // write new content to file
-    await file.writeAsString('$entryTitle\n$entryContent\n${time.hour}\n${time.minute}\n\n', mode: FileMode.append);
+    await file.writeAsString('$entryTitle\n$entryContent\n${time.hour}\n${time.minute}\nfalse\n\n', mode: FileMode.append);
 
     // Pass entry data back to the previous screen
     widget.onEntrySaved(entryTitle, entryContent, time.hour.toString(), time.minute.toString());

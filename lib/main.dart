@@ -1,5 +1,3 @@
-import 'package:diary/UI/note_list_page.dart';
-import 'package:diary/UI/note_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 

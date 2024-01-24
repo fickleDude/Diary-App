@@ -1,5 +1,6 @@
 
 
+import 'package:diary/UI/note_list_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -8,19 +9,28 @@ import 'login_page.dart';
 class NotePage extends StatelessWidget {
   final String title;
   final String note;
-  final String? time_in_hours;
-  final String? time_in_minutes;
+  final String? hours;
+  final String? minutes;
   final String username;
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  NotePage({required this.username, required this.title, required this.note, this.time_in_hours, this.time_in_minutes});
+  NotePage({required this.username, required this.title, required this.note, this.hours, this.minutes});
 
   void _logout() {
     // Перейти на страницу входа без очистки данных для конкретного пользователя
     navigatorKey.currentState?.pushReplacement(
       MaterialPageRoute(
         builder: (context) => LoginPage(),
+      ),
+    );
+  } 
+  
+  void _back() {
+    // Перейти на страницу входа без очистки данных для конкретного пользователя
+    navigatorKey.currentState?.pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => NoteListPage(username: username),
       ),
     );
   }
@@ -55,9 +65,10 @@ class NotePage extends StatelessWidget {
               children: [
                 header(this.title),
                 SizedBox(height: 25,),
-                reminder(this.time_in_hours, this.time_in_minutes),
+                reminder(this.hours, this.minutes),
                 SizedBox(height: 25,),
                 body(this.note),
+                backButton()
               ],
             ),
           ),
@@ -129,7 +140,7 @@ class NotePage extends StatelessWidget {
   Widget body(String note){
     return Container(
       width: 338,
-      height: 300,
+      height: 250,
       padding: const EdgeInsets.all(30),
       clipBehavior: Clip.antiAlias,
       decoration: ShapeDecoration(
@@ -158,4 +169,21 @@ class NotePage extends StatelessWidget {
     );
   }
 
+  Widget backButton(){
+    return Container(
+      alignment: AlignmentDirectional.topStart,
+      padding: EdgeInsets.only(left: 32, top: 16),
+      child: CircleAvatar(
+        radius: 25,
+        backgroundColor: Color(0xB2E8E4E7),
+        child: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.black,
+          ),
+          onPressed: _back,
+        ),
+      ),
+    );
+  }
 }
