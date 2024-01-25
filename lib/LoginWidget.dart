@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'auth.dart'; // Assuming RegistrationWidget is defined in auth.dart
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({Key? key}) : super(key: key);
@@ -8,10 +10,11 @@ class LoginWidget extends StatefulWidget {
   _LoginWidgetState createState() => _LoginWidgetState();
 }
 
-class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin {
+class _LoginWidgetState extends State<LoginWidget> {
   late TextEditingController _emailController, _passwordController;
   late FocusNode _emailFocusNode, _passwordFocusNode;
-  late bool _passwordVisibility;
+  late SharedPreferences _prefs;
+  late bool _passwordVisibility; // Add this line
 
   @override
   void initState() {
@@ -20,7 +23,12 @@ class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin
     _passwordController = TextEditingController();
     _emailFocusNode = FocusNode();
     _passwordFocusNode = FocusNode();
-    _passwordVisibility = false;
+    _passwordVisibility = false; // Initialize _passwordVisibility
+    _loadSharedPreferences();
+  }
+
+  Future<void> _loadSharedPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
   }
 
   @override
@@ -30,6 +38,30 @@ class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
+  }
+
+  bool _validateCredentials() {
+    // Retrieve stored email and password from SharedPreferences
+    String? savedEmail = _prefs.getString('email');
+    String? savedPassword = _prefs.getString('password');
+
+    // Compare with entered credentials
+    return savedEmail == _emailController.text && savedPassword == _passwordController.text;
+  }
+
+  void _handleLogin() {
+    if (_validateCredentials()) {
+      // Credentials are correct, proceed with login logic
+      print('Login successful!');
+    } else {
+      // Credentials are incorrect, show an error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid credentials. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -45,7 +77,8 @@ class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin
 
     return GestureDetector(
       onTap: () {
-        if (_emailFocusNode.canRequestFocus || _passwordFocusNode.canRequestFocus) {
+        if (_emailFocusNode.canRequestFocus ||
+            _passwordFocusNode.canRequestFocus) {
           FocusScope.of(context).requestFocus(FocusNode());
         }
       },
@@ -105,7 +138,13 @@ class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin
                         constraints: BoxConstraints(maxWidth: 570),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          boxShadow: [BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2))],
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 4,
+                              color: Color(0x33000000),
+                              offset: Offset(0, 2),
+                            )
+                          ],
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -123,7 +162,8 @@ class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin
                               ),
                             ),
                             Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(0, 12, 0, 24),
+                              padding:
+                                  EdgeInsetsDirectional.fromSTEB(0, 12, 0, 24),
                               child: Text(
                                 'Fill out the information below to access your account.',
                                 textAlign: TextAlign.center,
@@ -136,19 +176,63 @@ class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin
                               ),
                             ),
                             for (var inputField in [
-                              _buildInputField('Email', _emailController, _emailFocusNode, Icons.email),
-                              _buildInputField('Password', _passwordController, _passwordFocusNode, Icons.lock, obscureText: !_passwordVisibility),
+                              _buildInputField('Email', _emailController,
+                                  _emailFocusNode, Icons.email),
+                              _buildInputField('Password', _passwordController,
+                                  _passwordFocusNode, Icons.lock,
+                                  obscureText: !_passwordVisibility),
                             ])
-                              Container(width: double.infinity, child: inputField),
-                            Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 8),
-                              child: Container(
+                              Container(
                                 width: double.infinity,
+                                child: inputField,
+                              ),
+                            Padding(
+                              padding:
+                                  EdgeInsetsDirectional.fromSTEB(10, 8, 10, 8),
+                              child: ElevatedButton(
+                                onPressed: _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  textStyle: TextStyle(color: Colors.white),
+                                ),
+                                child: Text('Login'),
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  EdgeInsetsDirectional.fromSTEB(10, 8, 10, 8),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RegistrationWidget(),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  textStyle: TextStyle(color: Colors.white),
+                                ),
+                                child: Text('Register'),
+                              ),
+                            ),
+                            // Hidden button
+                            Visibility(
+                              visible: true,
+                              child: Padding(
+                                padding:
+                                    EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    // Handle login button press
+                                    // Handle hidden button press
+                                    print('Hidden button pressed!');
                                   },
-                                  child: Text('Login'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    textStyle: TextStyle(color: Colors.white),
+                                  ),
+                                  child: Text('Hidden Button'),
                                 ),
                               ),
                             ),
@@ -166,7 +250,9 @@ class _LoginWidgetState extends State<LoginWidget> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildInputField(String label, TextEditingController controller, FocusNode focusNode, IconData icon, {bool obscureText = false}) {
+  Widget _buildInputField(String label, TextEditingController controller,
+      FocusNode focusNode, IconData icon,
+      {bool obscureText = false}) {
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
       child: TextFormField(
