@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart'; 
+import 'admin.dart';
 
 class RegistrationLoginWidget extends StatefulWidget {
   const RegistrationLoginWidget({Key? key}) : super(key: key);
@@ -51,13 +52,22 @@ class _RegistrationLoginWidgetState extends State<RegistrationLoginWidget> {
   }
 
   void _login() {
-    String email = _emailController.text;
-    String password = _passwordController.text;
+  String email = _emailController.text;
+  String password = _passwordController.text;
 
-    String? storedEmail = _prefs.getString('email');
-    String? storedPassword = _prefs.getString('password');
+  // Check if the incoming user is an administrator
+  if (email == 'admin' && password == 'adminPassword') {
+      // Authorization successful for administrator
+     // Open the administration panel
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AdminPanel()),
+    );
+  } else {
+    // Остальные пользователи
+    String? storedPassword = _prefs.getString(email);
 
-    if (email == storedEmail && password == storedPassword) {
+    if (storedPassword != null && password == storedPassword) {
       // Credentials are correct, allow login
       // Your further logic for successful login
       print('Login successful');
@@ -77,53 +87,63 @@ class _RegistrationLoginWidgetState extends State<RegistrationLoginWidget> {
       );
       print('Login failed');
     }
-
-    // Clear text fields
-    _emailController.clear();
-    _passwordController.clear();
   }
 
-  void _changePassword() {
-    String email = _emailController.text;
-    String newPassword = _passwordController.text;
+  // Clear text fields
+  _emailController.clear();
+  _passwordController.clear();
+}
 
-    // Проверяем, существует ли пользователь с таким email
-    if (_prefs.getKeys().contains(email)) {
-      _prefs.setString(email, newPassword); // Изменяем пароль
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Password changed successfully'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('User is not found'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+void _changePassword() {
+  String email = _emailController.text;
+  String newPassword = _passwordController.text;
+// Check if a user with this email exists
+   if (_prefs.getKeys().contains(email)) {
+     // Now we need to check if this is a password change for the admin user
+     if (email != 'admin') {
+       _prefs.setString(email, newPassword); // Change the password
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text('Password changed successfully'),
+           duration: Duration(seconds: 2),
+         ),
+       );
+     } else {
+       // If this is the admin user, then you need to display a message about prohibiting password changes
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text('Changing password for admin is not allowed here'),
+           duration: Duration(seconds: 2),
+         ),
+       );
+     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('User is not found'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
+}
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Memento Mori'), // Название добавлено
-      ),
-      body: Container(
-        // Добавлен контейнер для фона с градиентом
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color.fromARGB(255, 210, 16, 228),
-                Color.fromARGB(255, 182, 13, 13)
-              ]),
-        ),
+   Widget build(BuildContext context) {
+     return Scaffold(
+       appBar: AppBar(
+         title: Text('Memento Mori'), // Title added
+       ),
+       body:Container(
+         // Added a container for the background with a gradient
+         decoration: BoxDecoration(
+           gradient: LinearGradient(
+               begin: Alignment.topCenter,
+               end: Alignment.bottomCenter,
+               colors: [
+                 Color.fromARGB(255, 210, 16, 228),
+                 Color.fromARGB(255, 182, 13, 13)
+               ]),
+         ),
         child: Padding(
           padding: EdgeInsets.all(16),
           child: Column(
