@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'LoginWidget.dart';
+import 'dart:convert';
 
 class User {
   final String email;
   final String password;
 
   User({required this.email, required this.password});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'email': email,
+      'password': password,
+    };
+  }
+
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      email: map['email'],
+      password: map['password'],
+    );
+  }
 }
 
 class RegistrationWidget extends StatefulWidget {
@@ -16,73 +32,60 @@ class RegistrationWidget extends StatefulWidget {
 }
 
 class _RegistrationWidgetState extends State<RegistrationWidget> {
-  late TextEditingController _emailController, _passwordController;
-  List<User> registeredUsers = [];
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  late SharedPreferences _prefs;
 
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController();
-    _passwordController = TextEditingController();
     _loadCredentials();
   }
 
   Future<void> _loadCredentials() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedEmail = prefs.getString('email');
-    String? savedPassword = prefs.getString('password');
-
-    if (savedEmail != null && savedPassword != null) {
-      setState(() {
-        _emailController.text = savedEmail;
-        _passwordController.text = savedPassword;
-      });
-    }
-  }
-
-  Future<void> _saveCredentials(String email, String password) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', email);
-    await prefs.setString('password', password);
+    _prefs = await SharedPreferences.getInstance();
   }
 
   void _register() async {
     String email = _emailController.text;
     String password = _passwordController.text;
 
-    if (registeredUsers.any((user) => user.email == email)) {
-      // User already exists, display an error
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Error'),
-            content: Text('User already exists.'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Ok'),
-              ),
-            ],
-          );
-        },
-      );
+    // Save the email and password to SharedPreferences
+    _prefs.setString('email', email);
+    _prefs.setString('password', password);
+
+    // Rest of your registration logic...
+
+    // Clear text fields
+    _emailController.clear();
+    _passwordController.clear();
+
+    // Navigate to the login screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginWidget(),
+      ),
+    );
+  }
+
+  List<User> _getStoredUsers() {
+    String? storedUsers = _prefs.getString('users');
+    if (storedUsers != null) {
+      List<dynamic> decodedUsers = json.decode(storedUsers);
+      return List<Map<String, dynamic>>.from(decodedUsers)
+          .map((userMap) => User.fromMap(userMap))
+          .toList();
     } else {
-      // Save user credentials
-      await _saveCredentials(email, password);
-
-      // Create a user object and add it to the list
-      User newUser = User(email: email, password: password);
-      setState(() {
-        registeredUsers.add(newUser);
-      });
-
-      // Display information about the registered user (for demonstration purposes)
-      print("User registered: ${newUser.email}");
-      print("Password: ${newUser.password}");
+      return [];
     }
+  }
+
+  Future<void> _saveUsers(List<User> users) async {
+    List<Map<String, dynamic>> userMaps =
+        users.map((user) => user.toMap()).toList();
+    String encodedUsers = json.encode(userMaps);
+    await _prefs.setString('users', encodedUsers);
   }
 
   @override
@@ -99,7 +102,8 @@ class _RegistrationWidgetState extends State<RegistrationWidget> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
-            BoxShadow(blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2)),
+            BoxShadow(
+                blurRadius: 4, color: Color(0x33000000), offset: Offset(0, 2)),
           ],
         ),
         child: Column(
