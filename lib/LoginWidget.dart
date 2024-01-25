@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'auth.dart'; // Assuming RegistrationWidget is defined in auth.dart
+import 'RegistrationWidget.dart'; // Assuming RegistrationWidget is defined in auth.dart
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({Key? key}) : super(key: key);
