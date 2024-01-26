@@ -16,6 +16,15 @@ class NoteListPage extends StatefulWidget {
 
 class _NoteListPageState extends State<NoteListPage> {
 
+  late double screenHeight;
+  late double screenWidth;
+
+  @override
+  void didChangeDependencies() {
+    screenHeight = MediaQuery.of(context).size.height;
+    screenWidth = MediaQuery.of(context).size.width;
+  }
+
   late SharedPreferences _prefs;
   List<String> entries = [];
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -82,7 +91,7 @@ class _NoteListPageState extends State<NoteListPage> {
         navigatorKey: navigatorKey,
         home: Scaffold(
             appBar: AppBar(
-              title: Text('ALL NOTES', style: TextStyle(
+              title: Text('MOMENTO MORI', style: TextStyle(
                 color: Colors.black,
                 fontSize: 24,
                 fontFamily: 'Inter',
@@ -92,11 +101,11 @@ class _NoteListPageState extends State<NoteListPage> {
               ),),
               actions: [
                 IconButton(
-                  icon: Icon(Icons.logout),
+                  icon: Icon(Icons.logout, color: Colors.black,),
                   onPressed: _logout,
                 ),
               ],
-              backgroundColor: Color(0xB2E8E4E7),
+              backgroundColor: Color(0xFFB8A8C2),
             ),
             body: Stack(
               children: [
@@ -111,22 +120,23 @@ class _NoteListPageState extends State<NoteListPage> {
                 Scaffold(
                   backgroundColor: Colors.transparent,
                   body: Container(
-                    width: double.infinity,
-                    height: double.infinity,
+                    padding: EdgeInsets.all(20),
+                    width: screenWidth,
+                    height: screenHeight,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(height: 20,),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            checkRemindersButton(),
-                            SizedBox(width: 40,),
-                            addNoteButton(),
-                          ],
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.center,//vertical in row
+                            children: [
+                              checkRemindersButton(),
+                              addNoteButton(),
+                            ],
+                          ),
                         ),
-                        SizedBox(height: 10,),
                         drawNotesList()
                       ],
                     ),
@@ -141,7 +151,6 @@ class _NoteListPageState extends State<NoteListPage> {
   Widget drawNotesList(){
     return Expanded(
       child: ListView.builder(
-          padding: const EdgeInsets.all(8),
           itemCount: entries.length,
           itemBuilder: (BuildContext context, int index) {
             List<String> entryLines = entries[index].split('\n');
@@ -150,29 +159,33 @@ class _NoteListPageState extends State<NoteListPage> {
             String entryTimeHour = entryLines[2];
             String entryTimeMin = entryLines[3];
             String entryIsPinned = entryLines[4];
-            return drawNote(index, entryTitle, entryContent, entryTimeHour, entryTimeMin, entryIsPinned);
+            return drawNote(index,
+                entryTitle, entryContent, entryTimeHour, entryTimeMin, entryIsPinned,
+                screenHeight / 4, screenWidth);
           }
       ),
     );
   }
 
 
-  Widget drawNote(int index, String title, String note, String hours, String minutes, String isPinned){
+  Widget drawNote(int index,
+      String title, String note, String hours, String minutes, String isPinned,
+      double noteHeight, double noteWidth){
     return InkWell(
       onTap: (){
         navigatorKey.currentState?.pushReplacement(
           MaterialPageRoute(
             builder: (context) => NotePage(username: widget.username, title: title,note: note,
-              hours : hours,
-              minutes: minutes),
+                hours : hours,
+                minutes: minutes),
           ),
         );
       },
       child: Container(
-          margin: EdgeInsets.only(left: 8, right: 8, top: 40, bottom: 20),
-          width: 338,
-          height: 200,
-          padding: const EdgeInsets.all(15),
+          margin: EdgeInsets.only(top: 16, bottom: 16),
+          width: noteWidth,
+          height: noteHeight,
+          padding: EdgeInsets.all(16),
           decoration: ShapeDecoration(
             color:  isPinned == "false" ? Color(0xB2BB9AA0) : Color(0xFFB8A8C2),
             shape: RoundedRectangleBorder(
@@ -180,62 +193,61 @@ class _NoteListPageState extends State<NoteListPage> {
             ),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // title
               Container(
-                width: 308,
-                height: 40,
-                padding: const EdgeInsets.all(10),
+                width: noteWidth,
+                height: noteHeight / 4,
+                alignment: Alignment.center,
                 decoration: ShapeDecoration(
                   color: Color(0xB2E8E4E7),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
+                child: SizedBox(
+                  child:
                     Text(
                       title,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.black,
-                        fontSize: 14,
+                        fontSize: 16,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
                         height: 0,
                         letterSpacing: 0.30,
                       ),
                     ),
-                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: 300,
-                height: 50,
-                child: Text(
-                  note.length > 100 ? note.replaceRange(100, note.length, '...') : note,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    height: 0,
-                    letterSpacing: 0.30,
+              //note
+              Container(
+                padding: EdgeInsets.only(top: 8, left: 10),
+                child: SizedBox(
+                  width: noteWidth,
+                  height: noteHeight / 4,
+                  child: Text(
+                    note.length > 100 ? note.replaceRange(100, note.length, '...') : note,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      height: 0,
+                      letterSpacing: 0.30,
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 11,),
+              //buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   deleteButton(index),
-                  SizedBox(width: 10,),
                   pinButton(index)
                 ],
               )
@@ -247,28 +259,31 @@ class _NoteListPageState extends State<NoteListPage> {
   }
 
   Widget deleteButton(int index){
-    return CircleAvatar(
-      radius: 27,
-      backgroundColor: Color(0xB2E8E4E7),
-      child: IconButton(
-        icon: Icon(
-          Icons.delete,
-          color: Colors.black,
+    return Padding(
+      padding: EdgeInsets.only(right: 16),
+      child: CircleAvatar(
+        radius: 25,
+        backgroundColor: Color(0xB2E8E4E7),
+        child: IconButton(
+          icon: Icon(
+            Icons.delete,
+            color: Colors.black,
+          ),
+          onPressed: (){
+            setState(() {
+              entries.removeAt(index);
+              _saveEntries();
+            });
+            showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("Note deleted!"),));
+          },
         ),
-        onPressed: (){
-          setState(() {
-            entries.removeAt(index);
-            _saveEntries();
-          });
-          showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("Note deleted!"),));
-        },
       ),
     );
   }
 
   Widget pinButton(int index){
     return CircleAvatar(
-      radius: 27,
+      radius: 25,
       backgroundColor: Color(0xB2E8E4E7),
       child: IconButton(
         icon: Icon(
@@ -299,8 +314,8 @@ class _NoteListPageState extends State<NoteListPage> {
 
   Widget addNoteButton(){
     return CircleAvatar(
-      radius: 27,
-      backgroundColor: Color(0xB2E8E4E7),
+      radius: (screenHeight - 16*3) / 27,
+      backgroundColor: Color(0xB2BB9AA0),
       child: IconButton(
         icon: Icon(
           Icons.add,
@@ -330,11 +345,14 @@ class _NoteListPageState extends State<NoteListPage> {
   Widget checkRemindersButton(){
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
-        shape: StadiumBorder(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
         backgroundColor: Color(0xB2BB9AA0),
         foregroundColor: Color(0xB2BB9AA0),
-        fixedSize: Size(250, 45),
-        // padding: EdgeInsets.all(4),
+        fixedSize: Size(
+            (screenWidth - 16 * 2) / 1.5,
+            (screenHeight - 16 * 3) / 14.0),
         elevation: 4,
       ),
       onPressed: () async {
@@ -365,7 +383,7 @@ class _NoteListPageState extends State<NoteListPage> {
       icon: const Icon(Icons.remove_red_eye, color: Colors.black,),
       label: const Text('CHECK REMINDERS', style: TextStyle(
         color: Colors.black,
-        fontSize: 14,
+        fontSize: 16,
         fontFamily: 'Inter',
         fontWeight: FontWeight.w400,
         height: 0,
