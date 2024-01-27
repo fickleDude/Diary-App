@@ -8,7 +8,7 @@ class NotePage extends StatelessWidget {
 
   late double screenHeight;
   late double screenWidth;
-  late double screenMarging;
+  // late double screenMarging;
 
   final String title;
   final String note;
@@ -42,7 +42,7 @@ class NotePage extends StatelessWidget {
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
-    screenMarging = (screenHeight - (screenHeight / 14 + screenHeight / 3 + 30)) / 32;
+    // screenMarging = (screenHeight - (screenHeight / 14 + screenHeight / 3 + 30)) / 32;
 
     return MaterialApp(
       navigatorKey: navigatorKey,
@@ -83,37 +83,39 @@ class NotePage extends StatelessWidget {
   }
 
   Widget header(String title){
-    return Stack(
-      alignment: AlignmentDirectional.center,
-      children: [
-        Container(
-          width: screenWidth,
-          height: screenHeight / 4,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/background/note.jpg"),
-              fit: BoxFit.cover,
+    return Expanded(
+      child: Stack(
+        alignment: AlignmentDirectional.center,
+        children: [
+          Container(
+            width: screenWidth,
+            // height: screenHeight / 4,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/background/note.jpg"),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-        ),
-        Text(title, style: TextStyle(
-                        color: Color(0xB2E8E4E7),
-                        fontSize: 44,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.bold,
-                        height: 0,
-                        letterSpacing: 0.30,
-                      ),)
-      ],
+          Text(title, style: TextStyle(
+                          color: Color(0xB2E8E4E7),
+                          fontSize: 44,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.bold,
+                          height: 0,
+                          letterSpacing: 0.30,
+                        ),)
+        ],
+      ),
     );
   }
 
   Widget reminder(String? time_in_hours, String? time_in_minutes){
     return Container(
-      margin: EdgeInsets.symmetric( horizontal: 8),
+      margin: EdgeInsets.symmetric( horizontal: 16, vertical: 32),
+      padding: EdgeInsets.all(16),
       alignment: Alignment.center,
-      width:  3.5 * screenWidth / 4,
-      height: screenHeight / 14,
+      width: screenWidth,
       decoration: ShapeDecoration(
         color: Color(0x7FE8E4E7),
         shape: RoundedRectangleBorder(
@@ -139,42 +141,41 @@ class NotePage extends StatelessWidget {
   }
 
   Widget body(String note){
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: screenMarging, horizontal: 16),
-      width: 3.5* screenWidth / 4,
-      height: screenHeight / 3,
-      padding: const EdgeInsets.all(30),
-      clipBehavior: Clip.antiAlias,
-      decoration: ShapeDecoration(
-        color: Color(0x7FE8E4E7),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-      ),
-      child:
-          SizedBox(
-            width: 3.5 * screenWidth / 4,
-            height: screenHeight / 3,
-            child: SingleChildScrollView(
-              child: Text(note, style: TextStyle(
-                color: Colors.black,
-                fontSize: 17,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                height: 0,
-                letterSpacing: -0.30,
-              ),),
-              scrollDirection: Axis.vertical,
-            ),
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        width: screenWidth,
+        padding: const EdgeInsets.all(30),
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          color: Color(0x7FE8E4E7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
           ),
+        ),
+        child:
+            SizedBox(
+              child: SingleChildScrollView(
+                child: Text(note, style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 17,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                  height: 0,
+                  letterSpacing: -0.30,
+                ),),
+                scrollDirection: Axis.vertical,
+              ),
+            ),
 
+      ),
     );
   }
 
   Widget backButton(){
     return Container(
       alignment: AlignmentDirectional.topStart,
-      margin: EdgeInsets.symmetric(vertical: screenMarging, horizontal: 25),
+      margin: EdgeInsets.only(left: 25, bottom: 16),
       child: CircleAvatar(
         radius: 30,
         backgroundColor: Color(0xB2E8E4E7),
