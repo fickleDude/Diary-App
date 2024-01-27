@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'diary_page.dart';
+import 'new_note_page.dart';
+import 'login_page.dart';
+//import 'note_list_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomePage extends StatefulWidget {
+
+  final String username;
+  WelcomePage({required this.username});
+
   @override
   _WelcomePageState createState() => _WelcomePageState();
 }
@@ -10,6 +18,33 @@ class _WelcomePageState extends State<WelcomePage> {
   TextEditingController _usernameController = TextEditingController();
   bool isDarkMode = false;
 
+  late SharedPreferences _prefs;
+  List<String> entries = [];
+  String Last_content  = "";
+  String Last_title  = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _initSharedPreferences();
+  }
+
+  Future<void> _initSharedPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+    _loadEntries();
+  }
+
+  Future<void> _loadEntries() async {
+    List<String>? storedEntries = _prefs.getStringList('${widget.username}_entries');
+    if (storedEntries != null) {
+      setState(() {
+        entries = storedEntries;
+        List<String> entryLines = entries[0].split('\n');
+        Last_title = entryLines[0];
+        Last_content = entryLines[1];
+      });
+    }
+  }
 
 @override
 Widget build(BuildContext context) {
@@ -59,7 +94,9 @@ Widget build(BuildContext context) {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          ElevatedButton(onPressed: (){},
+          ElevatedButton(onPressed: (){
+            Navigator.of(context).push(MaterialPageRoute(builder: (context)=> New_note_Page()));
+          },
             child: Text("MAKE A NOTE", style: TextStyle(fontFamily: "Inter", fontSize: 18, color: Colors.black,fontWeight: FontWeight.bold)),
             style: ButtonStyle(
               fixedSize: MaterialStateProperty.all<Size>(Size(MediaQuery.of(context).size.width/1.1, MediaQuery.of(context).size.height/15)),
@@ -152,7 +189,7 @@ Widget build(BuildContext context) {
                 SizedBox(
                   width: MediaQuery.of(context).size.width/1.3,
                   child: Text(
-                    "TITLE\n\nYou Must Have Seen One Of The Spirits Of The Forest, And That Means You're A Very Lucky Girl. You Can Only See The Spirits If They Want You To. Let's Go Give Them A Proper Greeting.",
+                    "${Last_title}\n\n${Last_content}",
                     maxLines: 10,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontFamily: "Inter", fontSize: 16),
@@ -166,7 +203,9 @@ Widget build(BuildContext context) {
         ],
     ),
       Positioned(bottom: 30, left: MediaQuery.of(context).size.width/1.25, child:
-      ElevatedButton(onPressed: (){},
+      ElevatedButton(onPressed: (){
+        Navigator.of(context).push(MaterialPageRoute(builder: (context)=> NoteListPage()));
+      },
         child: Align( alignment: Alignment.center,
             child: Icon(Icons.north_east, color: Colors.black, size: 35,)),
         style: ButtonStyle(
@@ -179,7 +218,9 @@ Widget build(BuildContext context) {
           ), backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 189, 157, 164)),
         ),),),
       Padding(padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/15, top:MediaQuery.of(context).size.height/2.6), child:
-      IconButton(onPressed: (){}, icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 30)))
+      IconButton(onPressed: (){
+        Navigator.of(context).push(MaterialPageRoute(builder: (context)=> LoginPage()));
+      }, icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 30)))
     ]);
   }
 }

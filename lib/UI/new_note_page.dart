@@ -3,18 +3,19 @@ import 'diary_page.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
+//import 'note_list_page.dart';
 
 class New_note_Page extends StatefulWidget {
-  //final String username;
-  //final void Function(String title, String content, String time_hour, String time_min) onEntrySaved;
+  final String username;
+  final void Function(String title, String content, String time_hour, String time_min, String time_day, String time_month) onEntrySaved;
   final String? initialTitle;
   final String? initialContent;
 
 
   const New_note_Page({
     Key? key,
-    //required this.username,
-    //required this.onEntrySaved,
+    required this.username,
+    required this.onEntrySaved,
     this.initialTitle,
     this.initialContent,
 
@@ -41,7 +42,7 @@ class _New_note_Page extends State<New_note_Page> {
   }
 
   Future<void> _saveEntry(DateTime datetime) async {
-    String fileName = 'diary_entries_.txt';
+    String fileName = 'diary_entries_${widget.username}.txt';
     final file = await _localFile(fileName);
     String entryTitle = titleController.text;
     String entryContent = contentController.text;
@@ -49,8 +50,8 @@ class _New_note_Page extends State<New_note_Page> {
     await file.writeAsString('$entryTitle\n$entryContent\n${datetime.hour}\n${datetime.minute}\n${datetime.day}\n${datetime.month}\n\n', mode: FileMode.append);
 
     // Pass entry data back to the previous screen
-    //widget.onEntrySaved(entryTitle, entryContent, time.hour.toString(), time.minute.toString());
-    Navigator.pop(context);
+    widget.onEntrySaved(entryTitle, entryContent, datetime.hour.toString(), datetime.minute.toString(), datetime.day.toString(), datetime.month.toString());
+    Navigator.of(context).push(MaterialPageRoute(builder: (context)=> NoteListPage()));
   }
 
   Future<File> _localFile(String fileName) async {
@@ -104,7 +105,9 @@ class _New_note_Page extends State<New_note_Page> {
                   ),
                 ),
                 Padding(padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/28, top:MediaQuery.of(context).size.height/4.35), child:
-                IconButton(onPressed: (){}, icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 30))),
+                IconButton(onPressed: (){
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context)=> NoteListPage()));
+                }, icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 30))),
                 SizedBox(height: 10),
               ],
             ),]
