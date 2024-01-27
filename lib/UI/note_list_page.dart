@@ -2,6 +2,7 @@ import 'package:diary/UI/note_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/constants.dart';
 import 'create_entry_page.dart';
 import 'login_page.dart';
 
@@ -12,6 +13,7 @@ class NoteListPage extends StatefulWidget {
 
   @override
   _NoteListPageState createState() => _NoteListPageState();
+
 }
 
 class _NoteListPageState extends State<NoteListPage> {
@@ -19,15 +21,8 @@ class _NoteListPageState extends State<NoteListPage> {
   late double screenHeight;
   late double screenWidth;
 
-  @override
-  void didChangeDependencies() {
-    screenHeight = MediaQuery.of(context).size.height;
-    screenWidth = MediaQuery.of(context).size.width;
-  }
-
   late SharedPreferences _prefs;
   List<String> entries = [];
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -62,14 +57,6 @@ class _NoteListPageState extends State<NoteListPage> {
     }
   }
 
-  void _logout() {
-    // Перейти на страницу входа без очистки данных для конкретного пользователя
-    navigatorKey.currentState?.pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => LoginPage(),
-      ),
-    );
-  }
 
   Future<void> _saveEntries() async {
     await _prefs.setStringList('${widget.username}_entries', entries);
@@ -87,25 +74,22 @@ class _NoteListPageState extends State<NoteListPage> {
 
   @override
   Widget build(BuildContext context) {
+    screenHeight = MediaQuery.of(context).size.height;
+    screenWidth = MediaQuery.of(context).size.width;
+    
     return MaterialApp(
-        navigatorKey: navigatorKey,
         home: Scaffold(
             appBar: AppBar(
-              title: Text('MOMENTO MORI', style: TextStyle(
-                color: Colors.black,
-                fontSize: 24,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.bold,
-                height: 0,
-                letterSpacing: 0.30,
-              ),),
+              title: Text('MOMENTO MORI', style: getTextStyle(24),),
               actions: [
                 IconButton(
                   icon: Icon(Icons.logout, color: Colors.black,),
-                  onPressed: _logout,
+                  onPressed: (){
+                    Navigator.push(context, LoginPage.getRoute());
+                  },
                 ),
               ],
-              backgroundColor: Color(0xFFB8A8C2),
+              backgroundColor: backgroundPurple,
             ),
             body: Stack(
               children: [
@@ -173,13 +157,11 @@ class _NoteListPageState extends State<NoteListPage> {
       double noteHeight, double noteWidth){
     return InkWell(
       onTap: (){
-        navigatorKey.currentState?.pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => NotePage(username: widget.username, title: title,note: note,
-                hours : hours,
-                minutes: minutes),
-          ),
-        );
+        Navigator.push(context, NotePage.getRoute(username: widget.username,
+            title: title,
+            note: note,
+            hours: hours,
+            minutes: minutes.length < 2 ? "0$minutes" : minutes));
       },
       child: Container(
           margin: EdgeInsets.only(top: 16, bottom: 16),
@@ -187,7 +169,7 @@ class _NoteListPageState extends State<NoteListPage> {
           height: noteHeight,
           padding: EdgeInsets.all(16),
           decoration: ShapeDecoration(
-            color:  isPinned == "false" ? Color(0xB2BB9AA0) : Color(0xFFB8A8C2),
+            color:  isPinned == "false" ? backgroundPink : backgroundPurple,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
@@ -202,7 +184,7 @@ class _NoteListPageState extends State<NoteListPage> {
                 height: noteHeight / 4,
                 alignment: Alignment.center,
                 decoration: ShapeDecoration(
-                  color: Color(0xB2E8E4E7),
+                  color: primaryColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -212,14 +194,7 @@ class _NoteListPageState extends State<NoteListPage> {
                     Text(
                       title,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                        height: 0,
-                        letterSpacing: 0.30,
-                      ),
+                      style: getTextStyle(16),
                     ),
                 ),
               ),
@@ -231,14 +206,7 @@ class _NoteListPageState extends State<NoteListPage> {
                   height: noteHeight / 4,
                   child: Text(
                     note.length > 100 ? note.replaceRange(100, note.length, '...') : note,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      height: 0,
-                      letterSpacing: 0.30,
-                    ),
+                    style: getTextStyle(14),
                   ),
                 ),
               ),
@@ -263,7 +231,7 @@ class _NoteListPageState extends State<NoteListPage> {
       padding: EdgeInsets.only(right: 16),
       child: CircleAvatar(
         radius: 25,
-        backgroundColor: Color(0xB2E8E4E7),
+        backgroundColor: primaryColor,
         child: IconButton(
           icon: Icon(
             Icons.delete,
@@ -274,7 +242,8 @@ class _NoteListPageState extends State<NoteListPage> {
               entries.removeAt(index);
               _saveEntries();
             });
-            showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("Note deleted!"),));
+            showDialog(context: context,
+                builder: (context) => dialog(context: context, text: "Note deleted!"));
           },
         ),
       ),
@@ -284,7 +253,7 @@ class _NoteListPageState extends State<NoteListPage> {
   Widget pinButton(int index){
     return CircleAvatar(
       radius: 25,
-      backgroundColor: Color(0xB2E8E4E7),
+      backgroundColor: primaryColor,
       child: IconButton(
         icon: Icon(
           Icons.push_pin,
@@ -298,7 +267,6 @@ class _NoteListPageState extends State<NoteListPage> {
           String entryTimeHour = entryLines[2];
           String entryTimeMin = entryLines[3];
           String entryIsPinned = entryLines[4];
-          //_prefs.setBool('${widget.username}_entry_$index', entryIsPinned == "false" ? true : false);
 
           setState(() {
             // Update the UI to reflect the change in pinned status
@@ -315,7 +283,7 @@ class _NoteListPageState extends State<NoteListPage> {
   Widget addNoteButton(){
     return CircleAvatar(
       radius: (screenHeight - 16*3) / 27,
-      backgroundColor: Color(0xB2BB9AA0),
+      backgroundColor: backgroundPink,
       child: IconButton(
         icon: Icon(
           Icons.add,
@@ -348,8 +316,8 @@ class _NoteListPageState extends State<NoteListPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
         ),
-        backgroundColor: Color(0xB2BB9AA0),
-        foregroundColor: Color(0xB2BB9AA0),
+        backgroundColor: backgroundPink,
+        foregroundColor: backgroundPink,
         fixedSize: Size(
             (screenWidth - 16 * 2) / 1.5,
             (screenHeight - 16 * 3) / 14.0),
@@ -377,7 +345,8 @@ class _NoteListPageState extends State<NoteListPage> {
           list.writeln(item);
         });
         String list_ = list.toString();
-        showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("Number of reminders:$count"),
+        showDialog(context: context,
+            builder: (context) =>  AlertDialog(title:Text("Number of reminders:$count"),
           content: Text("$list_"),));
       },
       icon: const Icon(Icons.remove_red_eye, color: Colors.black,),
