@@ -1,7 +1,7 @@
-import 'package:diary/UI/note_page.dart';
+import 'package:diary/repository/database_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../model/note.dart';
 import '../utils/constants.dart';
 import 'create_entry_page.dart';
 import 'login_page.dart';
@@ -21,57 +21,6 @@ class _NoteListPageState extends State<NoteListPage> {
   late double screenHeight;
   late double screenWidth;
 
-  late SharedPreferences _prefs;
-  List<String> entries = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _initSharedPreferences();
-  }
-
-  Future<void> _initSharedPreferences() async {
-    _prefs = await SharedPreferences.getInstance();
-    _loadEntries();
-  }
-
-  int _noteSort(String note1, String note2){
-    bool isPinned1 = note1.split('\n')[6] == "false" ? false : true;
-    bool isPinned2 = note2.split('\n')[6] == "false" ? false : true;
-    if(isPinned1 && !isPinned2){
-      return -1;
-    }else if(!isPinned1 && isPinned2){
-      return 1;
-    }else{
-      return 0;
-    }
-  }
-
-  Future<void> _loadEntries() async {
-    List<String>? storedEntries = _prefs.getStringList('${widget.username}_entries');
-    if (storedEntries != null) {
-      setState(() {
-        entries = storedEntries;
-        entries.sort(_noteSort);
-      });
-    }
-  }
-
-
-  Future<void> _saveEntries() async {
-    await _prefs.setStringList('${widget.username}_entries', entries);
-  }
-
-  void _handleEntrySaved(String title, String content, String time_hour, String time_min, String time_day, String time_month) {
-    String entry = '$title\n$content\n$time_hour\n$time_min\n$time_day\n$time_month\nfalse\n';
-    if (!entries.contains(entry)) {
-      setState(() {
-        entries.add(entry);
-        _saveEntries();
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
@@ -83,7 +32,7 @@ class _NoteListPageState extends State<NoteListPage> {
               title: Text('MOMENTO MORI', style: getTextStyle(24),),
               actions: [
                 IconButton(
-                  icon: Icon(Icons.logout, color: Colors.black,),
+                  icon: const Icon(Icons.logout, color: Colors.black,),
                   onPressed: (){
                     Navigator.push(context, LoginPage.getRoute());
                   },
@@ -94,7 +43,7 @@ class _NoteListPageState extends State<NoteListPage> {
             body: Stack(
               children: [
                 Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage("assets/background/notes_list.jpg"),
                       fit: BoxFit.cover,
@@ -127,41 +76,45 @@ class _NoteListPageState extends State<NoteListPage> {
                   ),
                 ),
               ],
-            )
+            ),
         )
     );
   }
 
-  Widget drawNotesList(){
+  Widget drawNotesList() {
     return Expanded(
-      child: ListView.builder(
-          itemCount: entries.length,
-          itemBuilder: (BuildContext context, int index) {
-            List<String> entryLines = entries[index].split('\n');
-            String entryTitle = entryLines[0];
-            String entryContent = entryLines[1];
-            String entryTimeHour = entryLines[2];
-            String entryTimeMin = entryLines[3];
-            String entryIsPinned = entryLines[6];
-            return drawNote(index,
-                entryTitle, entryContent, entryTimeHour, entryTimeMin, entryIsPinned,
-                screenHeight / 4, screenWidth);
+      child: FutureBuilder<List<Note>?>(
+        future: DatabaseHelper.db.getNotesByUsername(widget.username),
+        builder: (BuildContext context, AsyncSnapshot<List<Note>?> snapshot) {
+          //LOADING
+          if(snapshot.connectionState == ConnectionState.waiting){
+            return const CircularProgressIndicator();
           }
-      ),
+          //ERROR
+          else if(snapshot.hasError){
+            return Center(child: Text(snapshot.error.toString()));
+          }
+          //SUCCESS
+          else if (snapshot.hasData && snapshot.data != null) {
+            return ListView.builder(
+              itemCount: snapshot.data?.length,
+              itemBuilder: (BuildContext context, int index) {
+                Note item = snapshot.data![index];
+                return drawNote(item, screenHeight / 4, screenWidth);
+              },
+            );
+          }else{
+            return const Center(child: Text("no data found"));
+          }
+        },
+      )
     );
   }
 
-
-  Widget drawNote(int index,
-      String title, String note, String hours, String minutes, String isPinned,
-      double noteHeight, double noteWidth){
+  Widget drawNote(Note note, double noteHeight, double noteWidth){
     return InkWell(
-      onTap: (){
-        Navigator.push(context, NotePage.getRoute(username: widget.username,
-            title: title,
-            note: note,
-            hours: hours,
-            minutes: minutes.length < 2 ? "0$minutes" : minutes));
+      onTap: () {
+        Navigator.push(context, New_note_Page.getRoute(widget.username, note));
       },
       child: Container(
           margin: EdgeInsets.only(top: 16, bottom: 16),
@@ -169,7 +122,7 @@ class _NoteListPageState extends State<NoteListPage> {
           height: noteHeight,
           padding: EdgeInsets.all(16),
           decoration: ShapeDecoration(
-            color:  isPinned == "false" ? backgroundPink : backgroundPurple,
+            color:  note.isPinned ? backgroundPurple : backgroundPink,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
@@ -192,7 +145,7 @@ class _NoteListPageState extends State<NoteListPage> {
                 child: SizedBox(
                   child:
                     Text(
-                      title,
+                      note.title,
                       textAlign: TextAlign.center,
                       style: getTextStyle(16),
                     ),
@@ -205,7 +158,7 @@ class _NoteListPageState extends State<NoteListPage> {
                   width: noteWidth,
                   height: noteHeight / 4,
                   child: Text(
-                    note.length > 100 ? note.replaceRange(100, note.length, '...') : note,
+                    note.body.length > 100 ? note.body.replaceRange(100, note.body.length, '...') : note.body,
                     style: getTextStyle(14),
                   ),
                 ),
@@ -215,8 +168,8 @@ class _NoteListPageState extends State<NoteListPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  deleteButton(index),
-                  pinButton(index)
+                  deleteButton(note),
+                  pinButton(note)
                 ],
               )
             ],
@@ -226,7 +179,7 @@ class _NoteListPageState extends State<NoteListPage> {
     );
   }
 
-  Widget deleteButton(int index){
+  Widget deleteButton(Note note){
     return Padding(
       padding: EdgeInsets.only(right: 16),
       child: CircleAvatar(
@@ -238,10 +191,8 @@ class _NoteListPageState extends State<NoteListPage> {
             color: Colors.black,
           ),
           onPressed: (){
-            setState(() {
-              entries.removeAt(index);
-              _saveEntries();
-            });
+            DatabaseHelper.db.deleteNote(note);
+            setState(() {});
             showDialog(context: context,
                 builder: (context) => AlertDialog(title: Text("Note deleted!")));
           },
@@ -250,7 +201,7 @@ class _NoteListPageState extends State<NoteListPage> {
     );
   }
 
-  Widget pinButton(int index){
+  Widget pinButton(Note note){
     return CircleAvatar(
       radius: 25,
       backgroundColor: primaryColor,
@@ -260,22 +211,8 @@ class _NoteListPageState extends State<NoteListPage> {
           color: Colors.black,
         ),
         onPressed: (){
-          String entry = entries[index];
-          List<String> entryLines = entry.split('\n');
-          String entryTitle = entryLines[0];
-          String entryContent = entryLines[1];
-          String entryTimeHour = entryLines[2];
-          String entryTimeMin = entryLines[3];
-          String entryTimeDay = entryLines[4];
-          String entryTimeMonth = entryLines[5];
-          String entryIsPinned = entryLines[6];
-          setState(() {
-            // Update the UI to reflect the change in pinned status
-            entries[index] = '$entryTitle\n$entryContent\n${entryTimeHour}\n${entryTimeMin}\n${entryTimeDay}\n${entryTimeMonth}'
-                '\n${entryIsPinned == "false" ? "true" : "false"}\n';
-            _prefs.setStringList('${widget.username}_entries', entries);
-            entries.sort(_noteSort);
-          });
+          DatabaseHelper.db.pinOrUnpin(note);
+          setState(() {});
         },
       ),
     );
@@ -291,21 +228,7 @@ class _NoteListPageState extends State<NoteListPage> {
           color: Colors.black,
         ),
         onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => New_note_Page(
-                username: widget.username,
-                onEntrySaved: _handleEntrySaved,
-              ),
-            ),
-          );
-
-          // Check if result is not null (user didn't press back)
-          if (result != null) {
-            // Handle the result if needed
-            print('Entry added: $result');
-          }
+          Navigator.push(context, New_note_Page.getRoute(widget.username, null));
         },
       ),
     );
@@ -325,37 +248,7 @@ class _NoteListPageState extends State<NoteListPage> {
         elevation: 4,
       ),
       onPressed: () async {
-        int Time_min = TimeOfDay.now().minute;
-        int Time_hour = TimeOfDay.now().hour;
-        int Time_day = DateTime.now().day;
-        int Time_mounth = DateTime.now().month;
-        int count = 0;
-        var list = StringBuffer();
-        List<String> reminders = [];
-        for (int i = 0; i < entries.length;i++){
-          List<String> entryLines = entries[i].split('\n');
-          String entryTitle = entryLines[0];
-          String entryContent = entryLines[1];
-          String entryTimeHour = entryLines[2];
-          String entryTimeMin = entryLines[3];
-          String entryTimeDay = entryLines[4];
-          String entryTimeMounth = entryLines[5];
-          var hour = int.parse(entryTimeHour);
-          var min = int.parse(entryTimeMin);
-          var day = int.parse(entryTimeDay);
-          var mounth = int.parse(entryTimeMounth);
-          if ((hour == Time_hour && min == Time_min && day == Time_day && mounth == Time_mounth) || (mounth < Time_mounth) || (hour == Time_hour && min < Time_min && day == Time_day && mounth == Time_mounth)
-              || (day < Time_day && mounth == Time_mounth) || (hour < Time_hour && min == Time_min && day == Time_day && mounth == Time_mounth)){
-            count++;
-            reminders.add(entryTitle);
-          }
-        }
-        reminders.forEach((item){
-          list.writeln(item);
-        });
-        String list_ = list.toString();
-        showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("Number of reminders:$count", style: TextStyle(fontFamily: "Inter", fontSize: 18),),
-          content: Text("$list_",style: TextStyle(fontFamily: "Inter", fontSize: 18),),));
+        showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("no implementation", style: TextStyle(fontFamily: "Inter", fontSize: 18),),));
       },
       icon: const Icon(Icons.remove_red_eye, color: Colors.black,),
       label: const Text('CHECK REMINDERS', style: TextStyle(

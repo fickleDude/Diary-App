@@ -1,4 +1,6 @@
+import 'package:diary/repository/database_helper.dart';
 import 'package:flutter/material.dart';
+import '../model/note.dart';
 import 'create_entry_page.dart';
 import 'login_page.dart';
 import 'note_list_page.dart';
@@ -13,47 +15,13 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-  TextEditingController _usernameController = TextEditingController();
-  bool isDarkMode = false;
-  late SharedPreferences _prefs;
-  List<String> entries = [];
-  String Last_content  = "";
-  String Last_title  = "";
+
+  late Note? lastNote;
 
   @override
-  void initState() {
+  void initState() async {
     super.initState();
-    _initSharedPreferences();
-  }
-  Future<void> _saveEntries() async {
-    await _prefs.setStringList('${widget.username}_entries', entries);
-  }
-
-  void _handleEntrySaved(String title, String content, String time_hour, String time_min, String time_day, String time_month) {
-    String entry = '$title\n$content\n$time_hour\n$time_min\n$time_day\n$time_month\nfalse\n';
-    if (!entries.contains(entry)) {
-      setState(() {
-        entries.add(entry);
-        _saveEntries();
-      });
-    }
-  }
-
-  Future<void> _initSharedPreferences() async {
-    _prefs = await SharedPreferences.getInstance();
-    _loadEntries();
-  }
-
-  Future<void> _loadEntries() async {
-    List<String>? storedEntries = _prefs.getStringList('${widget.username}_entries');
-    if (storedEntries != null) {
-      setState(() {
-        entries = storedEntries;
-        List<String> entryLines_ = entries[entries.length-1].split('\n');
-        Last_title = entryLines_[0];
-        Last_content = entryLines_[1];
-      });
-    }
+    lastNote = await DatabaseHelper.db.getLastNoteByUsername(widget.username);
   }
 
   @override
@@ -66,7 +34,7 @@ class _WelcomePageState extends State<WelcomePage> {
           child: AppBar(
             centerTitle: true,
             flexibleSpace: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                   image: DecorationImage(
                       image: AssetImage("assets/images/header.png"),
                       fit: BoxFit.fill
@@ -105,7 +73,7 @@ class _WelcomePageState extends State<WelcomePage> {
           alignment: Alignment.center,
           children: [
             ElevatedButton(onPressed: (){
-              Navigator.of(context).push(MaterialPageRoute(builder: (context)=> New_note_Page(username: widget.username, onEntrySaved: _handleEntrySaved,)));
+              // Navigator.of(context).push(MaterialPageRoute(builder: (context)=> New_note_Page(username: widget.username, onEntrySaved: _handleEntrySaved,)));
             },
               child: Text("MAKE A NOTE", style: TextStyle(fontFamily: "Inter", fontSize: 18, color: Colors.black,fontWeight: FontWeight.bold)),
               style: ButtonStyle(
@@ -117,38 +85,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 ), backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 189, 157, 164)),
               ),),
             Align( alignment: Alignment(0.95,0), child: ElevatedButton(onPressed: (){
-              int Time_min = TimeOfDay.now().minute;
-              int Time_hour = TimeOfDay.now().hour;
-              int Time_day = DateTime.now().day;
-              int Time_mounth = DateTime.now().month;
-              int count = 0;
-              var list = StringBuffer();
-              List<String> reminders = [];
-              for (int i = 0; i < entries.length;i++){
-                List<String> entryLines = entries[i].split('\n');
-                String entryTitle = entryLines[0];
-                String entryContent = entryLines[1];
-                String entryTimeHour = entryLines[2];
-                String entryTimeMin = entryLines[3];
-                String entryTimeDay = entryLines[4];
-                String entryTimeMounth = entryLines[5];
-                var hour = int.parse(entryTimeHour);
-                var min = int.parse(entryTimeMin);
-                var day = int.parse(entryTimeDay);
-                var mounth = int.parse(entryTimeMounth);
-                if ((hour == Time_hour && min == Time_min && day == Time_day && mounth == Time_mounth) || (mounth < Time_mounth) || (hour == Time_hour && min < Time_min && day == Time_day && mounth == Time_mounth)
-                    || (day < Time_day && mounth == Time_mounth) || (hour < Time_hour && min == Time_min && day == Time_day && mounth == Time_mounth)){
-                  count++;
-                  reminders.add(entryTitle);
-                }
-              }
-              reminders.forEach((item){
-                list.writeln(item);
-              });
-              String list_ = list.toString();
-              showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("Number of reminders:$count", style: TextStyle(fontFamily: "Inter", fontSize: 18),),
-                content: Text("$list_",style: TextStyle(fontFamily: "Inter", fontSize: 18),),));
-
+              showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("no implementation", style: TextStyle(fontFamily: "Inter", fontSize: 18),)));
             },
               child: Align( alignment: Alignment.center,
                   child: Icon(Icons.notifications_none_outlined, color: Colors.black, size: 22,)),
@@ -199,7 +136,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width/1.3,
                     child: Text(
-                      "${Last_title}\n\n${Last_content}",
+                      "${lastNote?.title}\n\n${lastNote?.body}",
                       maxLines: 10,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontFamily: "Inter", fontSize: 16),

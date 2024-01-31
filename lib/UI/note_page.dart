@@ -1,27 +1,22 @@
+import 'package:diary/UI/login_page.dart';
 import 'package:diary/UI/note_list_page.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../model/note.dart';
 import '../utils/constants.dart';
-import 'login_page.dart';
 
 class NotePage extends StatelessWidget {
 
   late double screenHeight;
   late double screenWidth;
 
-  final String title;
-  final String note;
-  final String? hours;
-  final String? minutes;
-  final String username;
+  final Note note;
 
-  NotePage({required this.username, required this.title, required this.note, this.hours, this.minutes});
+  NotePage({required this.note});
 
-  static PageRouteBuilder getRoute(
-      {required String username, required String title, required String note, String? hours,  String? minutes}) {
+  static PageRouteBuilder getRoute({required Note note}) {
     return PageRouteBuilder(pageBuilder: (_, __, ___) {
-      return NotePage(username: username, title: title, note: note, hours: hours, minutes: minutes,);
+      return NotePage(note: note);
     });
   }
 
@@ -58,9 +53,9 @@ class NotePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                header(this.title),
-                reminder(this.hours, this.minutes),
-                body(this.note),
+                header(note.title),
+                // reminder(this.hours, this.minutes),
+                body(note.body),
                 backButton(context)
               ],
             ),
@@ -173,7 +168,7 @@ class NotePage extends StatelessWidget {
           ),
           onPressed: (){
             Navigator.push(context, PageRouteBuilder(pageBuilder: (_, __, ___) {
-              return NoteListPage(username: username);
+              return NoteListPage(username: note.username);
             })
             );
           },

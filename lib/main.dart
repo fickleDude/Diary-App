@@ -1,6 +1,6 @@
+import 'package:diary/UI/login_page.dart';
+import 'package:diary/UI/note_list_page.dart';
 import 'package:flutter/material.dart';
-
-import 'UI/login_page.dart';
 
 void main() async {
   runApp(MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: LoginPage()
+      home: NoteListPage(username: 'u1',)
     );
   }
 }
