@@ -29,7 +29,7 @@ class DatabaseHelper {
         "body TEXT,"
         "isPinned INTEGER);";
     String path = join(await getDatabasesPath(), 'diary.db');
-    return await openDatabase(path, version: 1, onOpen: (db) {},
+    return await openDatabase(path, version: 1, onOpen: (db){},
         onCreate: (Database db, int version) async {
       await db.execute(sql);
       version = 1;

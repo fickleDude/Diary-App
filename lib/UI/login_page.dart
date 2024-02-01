@@ -2,6 +2,7 @@ import 'package:diary/UI/note_list_page.dart';
 import 'package:diary/UI/register_page.dart';
 import 'package:diary/UI/welcome_page.dart';
 import 'package:diary/utils/text_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,57 +26,35 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  late SharedPreferences _prefs;
-
   late double screenHeight;
   late double screenWidth;
+
+  bool isLoading = false;
 
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
   GlobalKey<ScaffoldMessengerState>();
 
-  @override
-  void initState() {
-    super.initState();
-    _loadCredentials();
-  }
+  void _login() async{
+    setState(() {isLoading = true;});
 
-  Future<void> _loadCredentials() async {
-    _prefs = await SharedPreferences.getInstance();
-  }
-
-  void _login() {
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
-    //ADMIN
-    if (email == 'admin' && password == 'adminPassword') {
-      // Authorization successful for administrator
-      // Open the administration panel
-      Navigator.push(
-        context,
-        AdminPage.getRoute(),
-      );
-    }
-    // USERS
-    else {
-      String? storedPassword = _prefs.getString(email);
-      //CORRECT
-      if (storedPassword != null && password == storedPassword) {
-        dialog(context: context, text: 'Login successful');
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => WelcomePage(username: email)),
-        );
-      }
-      //INCORRECT
-      else if(storedPassword == null) {
-        dialog(context: context, text: 'User ${email} not found');
-      }
-      else{
-        dialog(context: context, text: 'Wrong credentials');
-      }
-    }
-
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text)
+        .then((userCredentials) =>
+    {
+      Navigator.push(context, WelcomePage.getRoute(username: _emailController.text))
+    })
+        .catchError((error){
+          if (error.code == 'user-not-found') {
+            dialog(context: context, text: 'No user found');
+          } else if (error.code == 'wrong-password') {
+            dialog(context: context, text: 'Wrong password provided for user.');
+          }
+        },
+        test: (error){
+          return error is FirebaseAuthException;
+        })
+    .whenComplete(() => setState(() { isLoading = false; }));
     //CLEAR
     _emailController.clear();
     _passwordController.clear();
@@ -88,23 +67,20 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _changePassword() {
-    String email = _emailController.text;
-    String newPassword = _passwordController.text;
-
-    //ADMIN
-    if(email == 'admin'){
-      dialog(context: context, text:'Changing password for admin is not allowed here');
-    }
-    //USER EXISTS
-    else if (_prefs.getKeys().contains(email)){
-      _prefs.setString(email, newPassword); // Change the password
-      dialog(context:context, text:'Password changed successfully');
-    }
-    //USER DOESN'T EXISTS
-    else{
-      dialog(context:context, text:'User ${email} not found');
-    }
+  void _changePassword() async {
+    await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text)
+        .then((userCredentials) =>
+    {
+        dialog(context: context, text: 'We send a message to ${_emailController.text} with reset link')
+    })
+      .catchError((error){
+          dialog(context: context, text: error.toString());
+        },
+        test: (error){
+          return error is FirebaseAuthException;
+        })
+        .whenComplete(() => setState(() { isLoading = false; }));
   }
 
   @override

@@ -8,7 +8,8 @@ Color primaryColor = Color(0xFFE2DCDC);
 
 dialog({required BuildContext context, required String text, String? content}){
   showDialog(context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) =>
+          AlertDialog(
         title: Text(text),
         content: content == null ? Text("") : Text(content),
         shape: RoundedRectangleBorder(
@@ -16,7 +17,8 @@ dialog({required BuildContext context, required String text, String? content}){
         ),
         backgroundColor: primaryColor,
         titleTextStyle: getTextStyle(16),
-      ));
+      )
+  );
 }
 
 TextStyle getTextStyle(double size, [Color color = Colors.black]) {

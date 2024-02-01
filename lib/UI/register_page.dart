@@ -1,13 +1,11 @@
+import 'dart:async';
+
 import 'package:diary/UI/login_page.dart';
-import 'package:diary/UI/note_list_page.dart';
-import 'package:diary/UI/welcome_page.dart';
+import 'package:diary/utils/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../utils/constants.dart';
 import '../utils/text_field.dart';
-import 'admin_page.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -26,53 +24,36 @@ class _RegisterPageState extends State<RegisterPage> {
 
   //form validator
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  late SharedPreferences _prefs;
+  //circular indicator
+  bool isLoading = false;
 
   late double screenHeight;
   late double screenWidth;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadCredentials();
-  }
-
-  Future<void> _loadCredentials() async {
-    _prefs = await SharedPreferences.getInstance();
-  }
-
-  void _register() {
+  Future<void> _register() async {
+    setState(() { isLoading = true; });
     final FormState? form = _formKey.currentState;
     if (!form!.validate()){
       return;
     }
-    String email = _emailController.text;
-    String password = _passwordController.text;
-    //USER EXISTS
-    if (_prefs.getKeys().contains(email)) {
-      dialog(context: context, text: 'This email is already in use');
-    }
-    //USER DOES NOT EXIST
-    else {
-      _prefs.setString(email, password);
-
-      _emailController.clear();
-      _passwordController.clear();
-      dialog(context: context, text: 'Account created successfully');
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => WelcomePage(username: email)),
-      );
-    }
-  }
-
-  void _back() {
-    // Перейти на страницу входа без очистки данных для конкретного пользователя
-    Navigator.push(
-      context,
-      LoginPage.getRoute(),
-    );
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text)
+        .then((userCredentials) =>
+        {
+          Navigator.push(context, LoginPage.getRoute())
+        })
+        .catchError((error){
+            if (error.code == 'weak-password') {
+              dialog(context: context, text: 'The password provided is too weak.');
+            } else if (error.code == 'email-already-in-use') {
+              dialog(context: context, text: 'The account already exists for that email.');
+            }
+        },
+        test: (error){
+        return error is FirebaseAuthException;
+        })
+      .whenComplete(() => setState(() { isLoading = false; }));
   }
 
   @override
@@ -107,9 +88,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Container(
                       width: screenWidth,
                       height: screenHeight,
-                      child: Padding(
+                      child:  Padding(
                         padding: EdgeInsets.only(top: 24, bottom: 24),
-                        child: Form(
+                        child: isLoading
+                            ? const Center(child: CircularProgressIndicator(
+                          color: Colors.black,
+                        )
+                        )
+                            : Form(
                           key: _formKey,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
@@ -200,8 +186,9 @@ class _RegisterPageState extends State<RegisterPage> {
             keyboardType: TextInputType.emailAddress,
             isPassword: false,
             onValidate: (email){
-              if(email!.isEmpty || email.length < 3 || !email.contains("@")){
-                return 'enter correct email';
+              if(email!.isEmpty || email.length < 3
+                  || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)){
+                return 'Email malformed';
               }
               return null;
             },
@@ -211,8 +198,8 @@ class _RegisterPageState extends State<RegisterPage> {
             controller: _passwordController,
             isPassword: true,
             onValidate: (password){
-              if(password!.isEmpty || password.length < 3){
-                return 'enter correct password';
+              if(password!.isEmpty || password.length < 6){
+                return 'Password too weak';
               }
               return null;
             },
@@ -229,7 +216,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   screenHeight / 16),
               elevation: 4,
             ),
-            onPressed: _register,
+            onPressed: (){
+              _register();
+            },
             child: Text('REGISTER', style: getTextStyle(16),),
           ),
         ],
@@ -249,7 +238,9 @@ class _RegisterPageState extends State<RegisterPage> {
             Icons.arrow_back,
             color: Colors.black,
           ),
-          onPressed: _back,
+          onPressed:(){
+            Navigator.pop(context);
+          }
         ),
       ),
     );

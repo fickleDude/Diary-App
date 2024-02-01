@@ -1,8 +1,10 @@
 import 'package:diary/UI/login_page.dart';
-import 'package:diary/UI/note_list_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -16,7 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: NoteListPage(username: 'u1',)
+      home: LoginPage()
     );
   }
 }

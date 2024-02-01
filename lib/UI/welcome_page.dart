@@ -1,4 +1,5 @@
 import 'package:diary/repository/database_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/note.dart';
 import 'create_entry_page.dart';
@@ -12,16 +13,20 @@ class WelcomePage extends StatefulWidget {
 
   @override
   _WelcomePageState createState() => _WelcomePageState();
+
+  static PageRouteBuilder getRoute({required String username}) {
+    return PageRouteBuilder(pageBuilder: (_, __, ___) {
+      return WelcomePage(username: username);
+    });
+  }
 }
 
 class _WelcomePageState extends State<WelcomePage> {
 
-  late Note? lastNote;
 
-  @override
-  void initState() async {
-    super.initState();
-    lastNote = await DatabaseHelper.db.getLastNoteByUsername(widget.username);
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut()
+        .then((value) => Navigator.push(context, LoginPage.getRoute()));
   }
 
   @override
@@ -56,7 +61,18 @@ class _WelcomePageState extends State<WelcomePage> {
               SizedBox(height: 20),
               _buildFunctionalitySection(context),
               SizedBox(height: 30),
-              Align(alignment: Alignment.centerLeft, child: _buildNoteSection(context)),
+              Align(alignment: Alignment.centerLeft,
+                  child: FutureBuilder<Note?>(
+                    future: DatabaseHelper.db.getLastNoteByUsername(widget.username),
+                    builder: (BuildContext context, AsyncSnapshot<Note?> snapshot) {
+                      if (snapshot.hasData && snapshot.data != null) {
+                        return _buildNoteSection(snapshot.data!);
+                      }else{
+                        return _buildNoteSection(Note(username: "", title: "Write your first note!", body: ""));
+                      }
+                    },
+                  )
+              )
             ],
           ),
         ),
@@ -103,7 +119,7 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   /// Section Widget
-  Widget _buildNoteSection(BuildContext context) {
+  Widget _buildNoteSection(Note lastNote){
     return Stack(children:<Widget> [
       Column(
         children: [
@@ -136,6 +152,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width/1.3,
                     child: Text(
+
                       "${lastNote?.title}\n\n${lastNote?.body}",
                       maxLines: 10,
                       overflow: TextOverflow.ellipsis,
@@ -169,7 +186,7 @@ class _WelcomePageState extends State<WelcomePage> {
               ),),],),
             Row(children:[
               IconButton(onPressed: (){
-              Navigator.of(context).push(MaterialPageRoute(builder: (context)=> LoginPage()));
+                _logout();
             }, icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 30)),])
           ],
           )

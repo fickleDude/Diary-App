@@ -1,4 +1,5 @@
 import 'package:diary/repository/database_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../model/note.dart';
@@ -21,6 +22,11 @@ class _NoteListPageState extends State<NoteListPage> {
   late double screenHeight;
   late double screenWidth;
 
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut()
+      .then((value) => Navigator.push(context, LoginPage.getRoute()));
+  }
+
   @override
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
@@ -33,8 +39,8 @@ class _NoteListPageState extends State<NoteListPage> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.logout, color: Colors.black,),
-                  onPressed: (){
-                    Navigator.push(context, LoginPage.getRoute());
+                  onPressed: () async{
+                    _logout();
                   },
                 ),
               ],
