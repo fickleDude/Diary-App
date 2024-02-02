@@ -10,6 +10,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         //firebase dependency
         classpath 'com.google.gms:google-services:4.3.8'
+        classpath 'com.android.tools.build:gradle:7.3.1'
     }
 }
 

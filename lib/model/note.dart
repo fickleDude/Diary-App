@@ -1,3 +1,6 @@
+// '{ "name": "Pizza da Mario", "cuisine": "Italian" }'
+import 'dart:convert';
+
 class Note {
   final int? id;
   final String username;
@@ -32,4 +35,19 @@ class Note {
     'body': body,
     'isPinned': isPinned ? 1 : 0
   };
+
+  static String toJsonString(Note note){
+    // type: dynamic (runtime type: _InternalLinkedHashMap<String, dynamic>)
+    final parsedNote = note.toMap();
+    // type: Note
+    return jsonEncode(parsedNote);
+  }
+
+  static Note toNote(String jsonData){
+    // type: dynamic (runtime type: _InternalLinkedHashMap<String, dynamic>)
+    final parsedJson = jsonDecode(jsonData);
+    // type: Note
+    return Note.fromMap(parsedJson);
+  }
+
 }

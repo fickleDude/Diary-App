@@ -1,10 +1,12 @@
 import 'package:diary/repository/database_helper.dart';
+import 'package:diary/utils/local_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../model/note.dart';
 import '../utils/constants.dart';
-import 'create_entry_page.dart';
+import 'new_note_page.dart';
 import 'login_page.dart';
 
 class NoteListPage extends StatefulWidget {
@@ -18,9 +20,15 @@ class NoteListPage extends StatefulWidget {
 }
 
 class _NoteListPageState extends State<NoteListPage> {
-
   late double screenHeight;
   late double screenWidth;
+  late User currentUser;
+
+  @override
+  initState(){
+    super.initState();
+    currentUser = FirebaseAuth.instance.currentUser!;
+  }
 
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut()
@@ -120,7 +128,7 @@ class _NoteListPageState extends State<NoteListPage> {
   Widget drawNote(Note note, double noteHeight, double noteWidth){
     return InkWell(
       onTap: () {
-        Navigator.push(context, New_note_Page.getRoute(widget.username, note));
+        Navigator.push(context, NewNotePage.getRoute(widget.username, note));
       },
       child: Container(
           margin: EdgeInsets.only(top: 16, bottom: 16),
@@ -234,7 +242,7 @@ class _NoteListPageState extends State<NoteListPage> {
           color: Colors.black,
         ),
         onPressed: () async {
-          Navigator.push(context, New_note_Page.getRoute(widget.username, null));
+          Navigator.push(context, NewNotePage.getRoute(widget.username, null));
         },
       ),
     );
@@ -254,7 +262,53 @@ class _NoteListPageState extends State<NoteListPage> {
         elevation: 4,
       ),
       onPressed: () async {
-        showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("no implementation", style: TextStyle(fontFamily: "Inter", fontSize: 18),),));
+        showDialog(context: context, builder: (context) =>
+            AlertDialog(
+              title:Text("Your active reminders", style: getTextStyle(18),),
+              content: SizedBox(
+                height: double.infinity,
+                child: FutureBuilder(
+                  future: LocalNotifications.getActiveNotifications(),
+                  builder: (BuildContext context, snapshot){
+                    //LOADING
+                    if(snapshot.connectionState == ConnectionState.waiting){
+                      return const CircularProgressIndicator();
+                    }
+                    //ERROR
+                    else if(snapshot.hasError){
+                      return Center(child: Text(snapshot.error.toString()));
+                    }
+                    //SUCCESS
+                    else if (snapshot.hasData && snapshot.data != null) {
+                      final notificationList = snapshot.data;
+                      if(notificationList!.isEmpty){
+                        return Text("no reminders yet");
+                      }else{
+                        return ListView.builder(
+                          itemCount: snapshot.data?.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            ActiveNotification item = snapshot.data![index];
+                            return ListTile(
+                              title: Text(item.title ?? "default title", style: getTextStyle(14),),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: (){
+                                  LocalNotifications.cancel(item.id!);
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      }
+
+                    }else{
+                      return const Center(child: Text("no data found"));
+                    }
+                  },
+                ),
+              ),
+            )
+        );
       },
       icon: const Icon(Icons.remove_red_eye, color: Colors.black,),
       label: const Text('CHECK REMINDERS', style: TextStyle(

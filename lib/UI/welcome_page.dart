@@ -2,10 +2,13 @@ import 'package:diary/repository/database_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/note.dart';
-import 'create_entry_page.dart';
+import '../utils/local_notifications.dart';
+import 'new_note_page.dart';
 import 'login_page.dart';
 import 'note_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'note_page.dart';
 
 class WelcomePage extends StatefulWidget {
   final String username;
@@ -23,6 +26,22 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> {
 
+  @override
+  initState(){
+    super.initState();
+    listenToNotifications();
+  }
+
+  //listen to any notification clicked or not
+  listenToNotifications(){
+    print("listenToNotifications");
+    LocalNotifications.onClickNotification.stream.listen((event) {
+      Navigator.push(
+          context,
+          NotePage.getRoute(note: Note.toNote(event))
+      );
+    });
+  }
 
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut()

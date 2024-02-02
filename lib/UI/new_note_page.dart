@@ -1,62 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'dart:io';
 import 'dart:async';
-import 'package:path_provider/path_provider.dart';
 import '../model/note.dart';
 import '../repository/database_helper.dart';
+import '../utils/local_notifications.dart';
 import 'note_list_page.dart';
 
-class New_note_Page extends StatefulWidget {
+class NewNotePage extends StatefulWidget {
   final String username;
   final Note? note;
-  const New_note_Page(this.username, this.note, {super.key});
+  const NewNotePage(this.username, this.note, {super.key});
 
   @override
-  _New_note_Page createState() => _New_note_Page();
+  _NewNotePage createState() => _NewNotePage();
 
   static PageRouteBuilder getRoute(String username, Note? note) {
     return PageRouteBuilder(pageBuilder: (_, __, ___) {
-      return New_note_Page(username, note);
+      return NewNotePage(username, note);
     });
   }
 }
 
-class _New_note_Page extends State<New_note_Page> {
+class _NewNotePage extends State<NewNotePage> {
   bool isDarkMode = false;
   TextEditingController titleController = TextEditingController();
   TextEditingController bodyController = TextEditingController();
+  DateTime? dateTime = null;
 
   @override
   void initState() {
     super.initState();
+    dateTime = null;
     if (widget.note != null) {
       titleController.text = widget.note!.title;
       bodyController.text = widget.note!.body;
     }
   }
 
-  Future _saveNote(DateTime dateTime) async {
-    if (widget.note != null) {
-      DatabaseHelper.db.updateNote(Note(
+  Future _saveNote() async {
+    Note newNote;
+    if(widget.note != null) {
+      newNote = Note(
           id: widget.note!.id,
           username: widget.username,
           title: titleController.text,
           body: bodyController.text,
-          isPinned: widget.note!.isPinned));
-    } else {
-      DatabaseHelper.db.addNote(Note(
+          isPinned: widget.note!.isPinned);
+      await DatabaseHelper.db.updateNote(newNote);
+    }else{
+      newNote = Note(
           username: widget.username,
           title: titleController.text,
           body: bodyController.text,
-          isPinned: false));
+          isPinned: false);
+      await DatabaseHelper.db.addNote(newNote);
     }
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => NoteListPage(username: widget.username)));
-  }
 
-  TimeOfDay selectedTime = TimeOfDay.now();
-  DateTime dateTime = DateTime.now();
+    if(dateTime != null){
+      //remove existing for note reminders
+      await LocalNotifications.getActiveNotifications()
+          .then((value) => value
+          .where((element) => element.body == newNote.title)
+          .forEach((element) {LocalNotifications.cancel(element.id!);}));
+      //add new reminder
+      await LocalNotifications.showScheduleNotification(
+          title: "${widget.username}, you have new reminder",
+          body: titleController.text,
+          //implement for existing note
+          payload: Note.toJsonString(newNote),
+          datetime: dateTime!);
+    }
+
+    //navigate back to note list
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) =>
+        NoteListPage(username: widget.username)));
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +193,9 @@ class _New_note_Page extends State<New_note_Page> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         ElevatedButton(
-          onPressed: pickDateTime,
+          onPressed: (){
+            pickDateTime();
+          },
           child: Align(
               alignment: Alignment.center,
               child: Icon(
@@ -202,9 +222,8 @@ class _New_note_Page extends State<New_note_Page> {
           width: 10,
         ),
         ElevatedButton(
-          onPressed: () async {
-            _saveNote(dateTime);
-            setState(() {});
+          onPressed: (){
+            _saveNote();
           },
           child: Align(
               alignment: Alignment.center,
@@ -246,10 +265,10 @@ class _New_note_Page extends State<New_note_Page> {
 
   Future<DateTime?> pickDate() => showDatePicker(
       context: context,
-      initialDate: dateTime,
+      initialDate: DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime(2100));
   Future<TimeOfDay?> pickTime() => showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: dateTime.hour, minute: dateTime.minute));
+      initialTime: TimeOfDay(hour: DateTime.now().hour, minute: DateTime.now().minute));
 }
