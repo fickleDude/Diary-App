@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:diary/UI/login_page.dart';
 import 'package:diary/utils/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../utils/text_field.dart';
 
@@ -21,8 +19,9 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
 
-  //form validator
+  //form validator - identify the state of form
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   //circular indicator
   bool isLoading = false;
@@ -31,28 +30,34 @@ class _RegisterPageState extends State<RegisterPage> {
   late double screenWidth;
 
   Future<void> _register() async {
-    setState(() { isLoading = true; });
-    final FormState? form = _formKey.currentState;
-    if (!form!.validate()){
+    //check if fields are valid
+    if (!_formKey.currentState!.validate()){
       return;
     }
+
+    setState(() { isLoading = true; });
+
     await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text)
-        .then((userCredentials) =>
+        .then((userCredentials)
         {
-          Navigator.push(context, LoginPage.getRoute())
+          userCredentials.user?.updateDisplayName(_usernameController.text);
+          Navigator.push(context, LoginPage.getRoute());
         })
         .catchError((error){
+          if(error is FirebaseAuthException){
             if (error.code == 'weak-password') {
-              dialog(context: context, text: 'The password provided is too weak.');
+              dialog(context: context, text: "AUTHENTICATION ERROR",content: 'The password provided is too weak');
             } else if (error.code == 'email-already-in-use') {
-              dialog(context: context, text: 'The account already exists for that email.');
+              dialog(context: context, text: "AUTHENTICATION ERROR",content: 'The account already exists for that email');
+            }else{
+              dialog(context: context, text: "AUTHENTICATION ERROR",content: error.code);
             }
-        },
-        test: (error){
-        return error is FirebaseAuthException;
-        })
+          }else{
+            dialog(context: context, text: "ERROR",content: error.toString());
+          }
+        },)
       .whenComplete(() => setState(() { isLoading = false; }));
   }
 
@@ -64,8 +69,8 @@ class _RegisterPageState extends State<RegisterPage> {
     return MaterialApp( //для создания графического интерфейса в стиле material design
         home: Scaffold(
             appBar: AppBar(
-              title: Text('REGISTER', style: getTextStyle(24),),
-              backgroundColor: backgroundPurple,
+              title: Text('MEMENTO MORI', style: getTextStyle(24),),
+              backgroundColor: primaryColor,
             ),
             body: Stack(
               children: [
@@ -102,9 +107,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               header(),
-                              SizedBox(height: screenHeight * 0.07),
+                              SizedBox(height: screenHeight * 0.05),
                               registerBox(),
-                              SizedBox(height: screenHeight * 0.19),
+                              SizedBox(height: screenHeight * 0.1),
                               backButton()
                             ],
                           ),
@@ -169,7 +174,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return Container(
       margin: EdgeInsets.only(left: 20, right: 20,top: 8),
       padding: EdgeInsets.all(16),
-      height: screenHeight / 3,
+      height: screenHeight / 2.3,
       decoration: ShapeDecoration(
         color: backgroundPink,
         shape: RoundedRectangleBorder(
@@ -180,6 +185,18 @@ class _RegisterPageState extends State<RegisterPage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          CustomTextField(
+            hintText: "Enter your username",
+            controller: _usernameController,
+            keyboardType: TextInputType.name,
+            isPassword: false,
+            onValidate: (username){
+              if(username!.isEmpty){
+                return 'Username is empty'; //error message shown on our text field
+              }
+              return null;//if all conditions satisfied
+            },
+          ),
           CustomTextField(
             hintText: "Enter your email",
             controller: _emailController,
@@ -216,8 +233,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   screenHeight / 16),
               elevation: 4,
             ),
-            onPressed: (){
-              _register();
+            onPressed: () async{
+              await _register();
             },
             child: Text('REGISTER', style: getTextStyle(16),),
           ),

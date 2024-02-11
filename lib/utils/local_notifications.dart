@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -95,7 +96,7 @@ class LocalNotifications{
     : AndroidNotificationDetails(currentUser.uid, currentUser.email ?? "");
     NotificationDetails notificationDetails =
     NotificationDetails(android: androidNotificationDetails);
-
+    print("NOTIFICATION ${currentUser?.uid} ${currentUser?.email}");
 
     //init timezone package
     tz.initializeTimeZones();
@@ -122,18 +123,30 @@ class LocalNotifications{
     await _flutterLocalNotificationsPlugin.cancelAll();
   }
 
-  static Future<List<ActiveNotification>> getActiveNotifications() async{
-    return await _flutterLocalNotificationsPlugin.getActiveNotifications();
-  }
-
-  static Future<List<ActiveNotification>?> getActiveUserNotifications(String channelId) async{
-    await _flutterLocalNotificationsPlugin.getActiveNotifications()
-        .then((value){return value.where((element) => element.channelId == channelId).toList();})
-        .onError((error, stackTrace) {
+  static Future<List<ActiveNotification>?> getActiveNotifications() async {
+    try {
+      final List<ActiveNotification> activeNotifications =
+      await _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!.getActiveNotifications();
+      return activeNotifications;
+    } on PlatformException catch (error) {
+      print('Error calling "getActiveNotifications"\n'
+          'code: ${error.code}\n'
+          'message: ${error.message}');
       return List.empty();
-    });
+    }
   }
 
-
+  static Future<String?> getPendingNotifications() async {
+    try {
+      final List<PendingNotificationRequest> activeNotifications =
+      await _flutterLocalNotificationsPlugin.pendingNotificationRequests();
+      return activeNotifications.isEmpty ? null : activeNotifications.first.body;
+    } on PlatformException catch (error) {
+      print('Error calling "getActiveNotifications"\n'
+          'code: ${error.code}\n'
+          'message: ${error.message}');
+      return null;
+    }
+  }
 
 }

@@ -1,5 +1,4 @@
 import 'package:diary/UI/login_page.dart';
-import 'package:diary/UI/note_list_page.dart';
 import 'package:flutter/material.dart';
 
 import '../model/note.dart';
@@ -28,14 +27,7 @@ class NotePage extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-        title: Text('MEMENTO MORI', style: TextStyle(
-          color: Colors.black,
-          fontSize: 24,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.bold,
-          height: 0,
-          letterSpacing: 0.30,
-        ),
+        title: Text('MEMENTO MORI', style: getTextStyle(24),
     ),
     actions: [
       IconButton(
@@ -109,14 +101,7 @@ class NotePage extends StatelessWidget {
             time_in_hours != null && time_in_minutes != null ?
                 'You added note at ${time_in_hours} : ${time_in_minutes}' :
                 'No reminder set',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 24,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w400,
-              height: 0,
-              letterSpacing: 0.30,
-            ),
+            style: getTextStyle(24),
           ),
     );
 
@@ -154,26 +139,4 @@ class NotePage extends StatelessWidget {
     );
   }
 
-  Widget backButton(BuildContext context){
-    return Container(
-      alignment: AlignmentDirectional.topStart,
-      margin: EdgeInsets.only(left: 25, bottom: 16),
-      child: CircleAvatar(
-        radius: 30,
-        backgroundColor: primaryColor,
-        child: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
-          onPressed: (){
-            Navigator.push(context, PageRouteBuilder(pageBuilder: (_, __, ___) {
-              return NoteListPage(username: note.username);
-            })
-            );
-          },
-        ),
-      ),
-    );
-  }
 }

@@ -37,24 +37,39 @@ class _LoginPageState extends State<LoginPage> {
   void _login() async{
     setState(() {isLoading = true;});
 
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text)
-        .then((userCredentials) =>
-    {
-      Navigator.push(context, WelcomePage.getRoute(username: _emailController.text))
-    })
-        .catchError((error){
+    if (FirebaseAuth.instance.currentUser != null){
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text)
+          .then((userCredentials)=>
+          Navigator.push(context, WelcomePage.getRoute(
+              username:userCredentials.user!.displayName ?? userCredentials.user!.email!)))
+          .catchError((error){
+        if(error is FirebaseAuthException){
           if (error.code == 'user-not-found') {
-            dialog(context: context, text: 'No user found');
+            dialog(context: context, text: "AUTHENTICATION ERROR", content: 'No user found');
           } else if (error.code == 'wrong-password') {
-            dialog(context: context, text: 'Wrong password provided for user.');
+            dialog(context: context, text: "AUTHENTICATION ERROR", content: 'Wrong password');
+          } else if (error.code == 'channel-error') {
+            dialog(context: context, text: "AUTHENTICATION ERROR", content: 'Email badly formatted');
+          }else if (error.code == 'invalid-credential') {
+            dialog(context: context, text: "AUTHENTICATION ERROR", content: 'Wrong password');
+          } else{
+            dialog(context: context, text: "AUTHENTICATION ERROR",content: error.code);
           }
-        },
-        test: (error){
-          return error is FirebaseAuthException;
-        })
-    .whenComplete(() => setState(() { isLoading = false; }));
+        }else{
+          dialog(context: context, text: "ERROR", content: error.toString());
+        }
+      },)
+          .whenComplete(() {
+        setState(() {
+          isLoading = false;
+        });
+      });
+    }else{
+      Navigator.push(context, WelcomePage.getRoute(username:_emailController.text));
+    }
+
     //CLEAR
     _emailController.clear();
     _passwordController.clear();
@@ -90,8 +105,8 @@ class _LoginPageState extends State<LoginPage> {
       return MaterialApp(
           home: Scaffold(
               appBar: AppBar(
-                title: Text('LOG IN', style: getTextStyle(24),),
-                backgroundColor: backgroundPurple,
+                title: Text('MEMENTO MORI', style: getTextStyle(24),),
+                backgroundColor: primaryColor,
               ),
               body: Stack(
                 children: [

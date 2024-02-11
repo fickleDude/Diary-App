@@ -1,4 +1,5 @@
 import 'package:diary/repository/database_helper.dart';
+import 'package:diary/utils/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/note.dart';
@@ -34,7 +35,6 @@ class _WelcomePageState extends State<WelcomePage> {
 
   //listen to any notification clicked or not
   listenToNotifications(){
-    print("listenToNotifications");
     LocalNotifications.onClickNotification.stream.listen((event) {
       Navigator.push(
           context,
@@ -43,61 +43,63 @@ class _WelcomePageState extends State<WelcomePage> {
     });
   }
 
-  Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut()
-        .then((value) => Navigator.push(context, LoginPage.getRoute()));
-  }
-
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Color.fromARGB(128, 184, 168, 194),
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(MediaQuery.of(context).size.height/4),
-          child: AppBar(
-            centerTitle: true,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage("assets/images/header.png"),
-                      fit: BoxFit.fill
-                  )
+    return Scaffold(
+        backgroundColor: backgroundPink,
+        appBar: AppBar(
+            title: Text('MEMENTO MORI', style: getTextStyle(24),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.logout, color: Colors.black,),
+                onPressed: (){
+                  Navigator.push(context, LoginPage.getRoute());
+                },
               ),
+            ],
+            backgroundColor: backgroundPink,
+          ),
+        body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFDCA9B1),
+                    Color(0xFFD4A6CA),
+                    primaryColor,
+                  ]),
             ),
           ),
-        ),
-        body: SizedBox(
-          width: MediaQuery.of(context).size.width,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          Column(
             children: [
-              SizedBox(height: 30),
-              Text(
-                "WELCOME, TOTORO!",
-                style: TextStyle(fontFamily: "Inter", fontSize: 35, fontWeight: FontWeight.bold, color: Color.fromARGB(230, 232, 228, 231)),
-              ),
+              header("WELCOME, ${widget.username}"),
               SizedBox(height: 20),
               _buildFunctionalitySection(context),
               SizedBox(height: 30),
               Align(alignment: Alignment.centerLeft,
-                  child: FutureBuilder<Note?>(
-                    future: DatabaseHelper.db.getLastNoteByUsername(widget.username),
-                    builder: (BuildContext context, AsyncSnapshot<Note?> snapshot) {
-                      if (snapshot.hasData && snapshot.data != null) {
-                        return _buildNoteSection(snapshot.data!);
-                      }else{
-                        return _buildNoteSection(Note(username: "", title: "Write your first note!", body: ""));
-                      }
-                    },
-                  )
-              )
+                        child: FutureBuilder<Note?>(
+                          future: DatabaseHelper.db.getLastNoteByUsername(widget.username),
+                          builder: (BuildContext context, AsyncSnapshot<Note?> snapshot) {
+                            if (snapshot.hasData && snapshot.data != null) {
+                              return _buildNoteSection(snapshot.data!);
+                            }else{
+                              return _buildNoteSection(Note(username: "", title: "Write your first note!", body: ""));
+                            }
+                          },
+                        )
+                    ),
+              backButton(context)
             ],
-          ),
-        ),
-      ),
-    );
+          )
+        ],
+        )
+        );
   }
+
 
   /// Section Widget
   Widget _buildFunctionalitySection(BuildContext context) {
@@ -108,7 +110,7 @@ class _WelcomePageState extends State<WelcomePage> {
           alignment: Alignment.center,
           children: [
             ElevatedButton(onPressed: (){
-              // Navigator.of(context).push(MaterialPageRoute(builder: (context)=> New_note_Page(username: widget.username, onEntrySaved: _handleEntrySaved,)));
+              Navigator.push(context, NewNotePage.getRoute(widget.username, null));
             },
               child: Text("MAKE A NOTE", style: TextStyle(fontFamily: "Inter", fontSize: 18, color: Colors.black,fontWeight: FontWeight.bold)),
               style: ButtonStyle(
@@ -117,10 +119,20 @@ class _WelcomePageState extends State<WelcomePage> {
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(45),
                   ),
-                ), backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 189, 157, 164)),
+                ),
+                backgroundColor: MaterialStateProperty.all<Color>(backgroundPink),
+                foregroundColor: MaterialStateProperty.all<Color>(backgroundPink),
               ),),
-            Align( alignment: Alignment(0.95,0), child: ElevatedButton(onPressed: (){
-              showDialog(context: context, builder: (context) =>  AlertDialog(title:Text("no implementation", style: TextStyle(fontFamily: "Inter", fontSize: 18),)));
+            Align( alignment: Alignment(0.95,0),
+              child: ElevatedButton(onPressed: (){
+                LocalNotifications
+                    .getPendingNotifications()
+                    .then((value){
+                  dialog(
+                      context: context,
+                      text: "PENDING NOTIFICATIONS",
+                      content:value ?? "no notifications");
+                });
             },
               child: Align( alignment: Alignment.center,
                   child: Icon(Icons.notifications_none_outlined, color: Colors.black, size: 22,)),
@@ -128,10 +140,10 @@ class _WelcomePageState extends State<WelcomePage> {
                 fixedSize: MaterialStateProperty.all<Size>(Size(MediaQuery.of(context).size.height/11, MediaQuery.of(context).size.height/11)),
                 shape: MaterialStateProperty.all(
                   RoundedRectangleBorder(
-                    side: BorderSide(color: Color.fromARGB(230, 232, 228, 231), width: 7),
+                    side: BorderSide(color:primaryColor, width: 7),
                     borderRadius: BorderRadius.circular(90),
                   ),
-                ), backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 189, 157, 164)),
+                ), backgroundColor: MaterialStateProperty.all<Color>(backgroundPink),
               ),),
             ),],)
     );
@@ -147,7 +159,7 @@ class _WelcomePageState extends State<WelcomePage> {
             padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/15),
             child: Text(
               "ENJOY TACKING NOTES",
-              style: TextStyle(fontFamily: "Inter", fontSize: 18, color: Colors.black,fontWeight: FontWeight.bold),
+              style: getTextStyle(18),
             ),
           ),),
           SizedBox(height: 5),
@@ -159,10 +171,10 @@ class _WelcomePageState extends State<WelcomePage> {
                 horizontal: 10,
                 vertical: 10,
               ),
-              height: MediaQuery.of(context).size.height/3.2,
+              height: MediaQuery.of(context).size.height/4,
               width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration( color: Color.fromARGB(179, 171, 146, 146),
-                borderRadius: BorderRadius.circular(45),
+              decoration: BoxDecoration( color: backgroundPink,
+                borderRadius: BorderRadius.circular(30),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -171,11 +183,10 @@ class _WelcomePageState extends State<WelcomePage> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width/1.3,
                     child: Text(
-
                       "${lastNote?.title}\n\n${lastNote?.body}",
                       maxLines: 10,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontFamily: "Inter", fontSize: 16),
+                      style: getTextStyle(16),
                     ),
                   ),
                   //SizedBox(height: 10),
@@ -189,8 +200,9 @@ class _WelcomePageState extends State<WelcomePage> {
           Column(children: [
             Row(children: [
               SizedBox(width: MediaQuery.of(context).size.width/1.45),
-            ElevatedButton(onPressed: (){
-              Navigator.of(context).push(MaterialPageRoute(builder: (context)=> NoteListPage(username: widget.username)));
+            ElevatedButton(
+              onPressed: (){
+              Navigator.push(context,NoteListPage.getRoute(widget.username));
             },
               child: Align( alignment: Alignment.center,
                   child: Icon(Icons.north_east, color: Colors.black, size: 22,)),
@@ -198,15 +210,15 @@ class _WelcomePageState extends State<WelcomePage> {
                 fixedSize: MaterialStateProperty.all<Size>(Size(MediaQuery.of(context).size.height/10, MediaQuery.of(context).size.height/10)),
                 shape: MaterialStateProperty.all(
                   RoundedRectangleBorder(
-                    side: BorderSide(color: Color.fromARGB(230, 232, 228, 231), width: 7),
+                    side: BorderSide(color: primaryColor, width: 7),
                     borderRadius: BorderRadius.circular(90),
                   ),
-                ), backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255, 189, 157, 164)),
-              ),),],),
-            Row(children:[
-              IconButton(onPressed: (){
-                _logout();
-            }, icon: Icon(Icons.arrow_back_ios, color: Colors.black, size: 30)),])
+                ),
+                backgroundColor: MaterialStateProperty.all<Color>(backgroundPink),
+                foregroundColor: MaterialStateProperty.all<Color>(backgroundPink),
+              ),
+            ),],
+            ),
           ],
           )
       )

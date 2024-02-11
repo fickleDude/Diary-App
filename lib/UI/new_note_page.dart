@@ -1,3 +1,4 @@
+import 'package:diary/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../model/note.dart';
@@ -56,11 +57,6 @@ class _NewNotePage extends State<NewNotePage> {
     }
 
     if(dateTime != null){
-      //remove existing for note reminders
-      await LocalNotifications.getActiveNotifications()
-          .then((value) => value
-          .where((element) => element.body == newNote.title)
-          .forEach((element) {LocalNotifications.cancel(element.id!);}));
       //add new reminder
       await LocalNotifications.showScheduleNotification(
           title: "${widget.username}, you have new reminder",
@@ -71,9 +67,7 @@ class _NewNotePage extends State<NewNotePage> {
     }
 
     //navigate back to note list
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) =>
-        NoteListPage(username: widget.username)));
+    Navigator.pop(context);
     }
 
   @override
@@ -92,19 +86,13 @@ class _NewNotePage extends State<NewNotePage> {
                 fit: BoxFit.cover,
               ),
             ),
-            child: Container(
-              width: double.maxFinite,
-              padding: EdgeInsets.symmetric(
-                horizontal: 30,
-                vertical: 30,
-              ),
               child: Stack(children: [
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
                       padding: EdgeInsets.only(
-                          left: MediaQuery.of(context).size.width / 25),
+                          left: MediaQuery.of(context).size.width / 15),
                       child: TextField(
                           controller: titleController,
                           style: TextStyle(
@@ -139,21 +127,12 @@ class _NewNotePage extends State<NewNotePage> {
                     SizedBox(
                       height: MediaQuery.of(context).size.height / 9,
                     ),
-                    Padding(
-                        padding: EdgeInsets.only(
-                            left: MediaQuery.of(context).size.width / 28),
-                        child: IconButton(
-                            onPressed: () {
-                              // Navigator.of(context).push(MaterialPageRoute(builder: (context)=> NoteListPage(username: widget.username,)));
-                            },
-                            icon: Icon(Icons.arrow_back_ios,
-                                color: Colors.black, size: 30))),
+                    backButton(context),
                   ],
                 ),
               ]),
             )),
-      ),
-    );
+      );
   }
 
   /// Section Widget
@@ -162,10 +141,11 @@ class _NewNotePage extends State<NewNotePage> {
         alignment: Alignment.topCenter,
         child: Container(
           height: MediaQuery.of(context).size.height / 2.1,
-          width: MediaQuery.of(context).size.width / 1.1,
+          width: MediaQuery.of(context).size.width / 1,
+          margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width / 30),
           decoration: BoxDecoration(
             color: Color.fromARGB(125, 232, 228, 231),
-            borderRadius: BorderRadius.circular(45),
+            borderRadius: BorderRadius.circular(30),
           ),
           child: Padding(
               padding: EdgeInsets.only(

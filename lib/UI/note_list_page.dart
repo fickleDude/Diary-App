@@ -1,8 +1,12 @@
+import 'dart:async';
+
+import 'package:diary/UI/check_notifications_page.dart';
 import 'package:diary/repository/database_helper.dart';
 import 'package:diary/utils/local_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../model/note.dart';
 import '../utils/constants.dart';
@@ -16,6 +20,12 @@ class NoteListPage extends StatefulWidget {
 
   @override
   _NoteListPageState createState() => _NoteListPageState();
+
+  static PageRouteBuilder getRoute(String username) {
+    return PageRouteBuilder(pageBuilder: (_, __, ___) {
+      return NoteListPage(username: username,);
+    });
+  }
 
 }
 
@@ -84,7 +94,8 @@ class _NoteListPageState extends State<NoteListPage> {
                             ],
                           ),
                         ),
-                        drawNotesList()
+                        drawNotesList(),
+                        backButton(context)
                       ],
                     ),
                   ),
@@ -262,53 +273,15 @@ class _NoteListPageState extends State<NoteListPage> {
         elevation: 4,
       ),
       onPressed: () async {
-        showDialog(context: context, builder: (context) =>
-            AlertDialog(
-              title:Text("Your active reminders", style: getTextStyle(18),),
-              content: SizedBox(
-                height: double.infinity,
-                child: FutureBuilder(
-                  future: LocalNotifications.getActiveNotifications(),
-                  builder: (BuildContext context, snapshot){
-                    //LOADING
-                    if(snapshot.connectionState == ConnectionState.waiting){
-                      return const CircularProgressIndicator();
-                    }
-                    //ERROR
-                    else if(snapshot.hasError){
-                      return Center(child: Text(snapshot.error.toString()));
-                    }
-                    //SUCCESS
-                    else if (snapshot.hasData && snapshot.data != null) {
-                      final notificationList = snapshot.data;
-                      if(notificationList!.isEmpty){
-                        return Text("no reminders yet");
-                      }else{
-                        return ListView.builder(
-                          itemCount: snapshot.data?.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            ActiveNotification item = snapshot.data![index];
-                            return ListTile(
-                              title: Text(item.title ?? "default title", style: getTextStyle(14),),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: (){
-                                  LocalNotifications.cancel(item.id!);
-                                },
-                              ),
-                            );
-                          },
-                        );
-                      }
+        LocalNotifications
+            .getPendingNotifications()
+            .then((value){
+              dialog(
+                  context: context,
+                  text: "PENDING NOTIFICATIONS",
+                  content:value ?? "no notifications");
+        });
 
-                    }else{
-                      return const Center(child: Text("no data found"));
-                    }
-                  },
-                ),
-              ),
-            )
-        );
       },
       icon: const Icon(Icons.remove_red_eye, color: Colors.black,),
       label: const Text('CHECK REMINDERS', style: TextStyle(

@@ -25,9 +25,10 @@ class CustomTextField extends StatelessWidget{
       obscureText: isPassword == false ? false : isPassword,
       controller: controller,
       decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
         labelText: hintText ?? 'hint text...',
         labelStyle: getTextStyle(16),
-        errorStyle: getTextStyle(16),
+        errorStyle: getTextStyle(10),
         filled: true,
         fillColor: primaryColor,
         focusedBorder: OutlineInputBorder(
