@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'common/helpers.dart';
-import 'models/note_list_model.dart';
+import 'services/note_list_provider.dart';
 import 'models/note_model.dart';
 
 
@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
           // Initialize the model in the builder. That way, Provider
           // can own Counter's lifecycle, making sure to call `dispose`
           // when not needed anymore.
-          create: (context) => NoteListModel(),
+          create: (context) => NoteListProvider(),
         ),
       ],
       child: MaterialApp.router(

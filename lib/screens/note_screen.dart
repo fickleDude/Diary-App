@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:diary/common/appbar.dart';
 import 'package:diary/common/text_field.dart';
-import 'package:diary/models/note_list_model.dart';
+import 'package:diary/services/note_list_provider.dart';
 import 'package:diary/models/note_model.dart';
 import 'package:provider/provider.dart';
 
@@ -101,23 +101,23 @@ class _NoteFormState extends State<NoteForm> {
   //LOGIC
   void _addNote(){
     if (_formKey.currentState!.validate()){ //validation
-      var noteList = context.read<NoteListModel>(); //provider pattern
-      noteList.add(NoteModel(username: "username",
+      var noteList = context.watch<NoteListProvider>(); //provider pattern
+      noteList.add(NoteModel(userId: "1",
           title: _titleController.text,
           body: _bodyController.text)
       );
-      context.go('/note_list');
+      context.go('/main/note_list');
     }
   }
 
   void _updateNote(){
     if (_formKey.currentState!.validate()){
-      var noteList = context.read<NoteListModel>();//provider pattern
-      noteList.update(widget.note!, NoteModel(username: "username",
+      var noteList = context.read<NoteListProvider>();//provider pattern
+      noteList.update(NoteModel(id: widget.note!.id, userId: widget.note!.userId,
           title: _titleController.text,
           body: _bodyController.text)
       );
-      context.go('/note_list');
+      context.go('/main/note_list');
     }
   }
 

@@ -39,6 +39,10 @@ dependencies:
   provider: ^6.1.1
   #declarative routing
   go_router: ^13.2.0
+  #SQLITE
+  sqflite: ^2.3.2
+  #helps to specify the location of the file that contains the database
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +69,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/background/
+    - assets/diary.db
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

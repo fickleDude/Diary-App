@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:diary/common/appbar.dart';
 import 'package:diary/common/helpers.dart';
 import 'package:diary/common/icon_button.dart';
-import 'package:diary/models/note_list_model.dart';
+import 'package:diary/services/note_list_provider.dart';
 import 'package:diary/models/note_model.dart';
 import 'package:provider/provider.dart';
 
@@ -21,13 +21,15 @@ class NoteList extends StatelessWidget {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
 
+    Provider.of<NoteListProvider>(context, listen: false).fetchNotes();
+
     return Scaffold(
       appBar: const CustomAppBar(height: 60,),
       //consumer causes ui redraw
       body: Stack(
         children: [
           getCover("assets/background/notes_list.jpg"),
-          Consumer<NoteListModel>(
+          Consumer<NoteListProvider>(
               builder: (context, noteList, child) {
                 return ListView.builder(
                   scrollDirection: Axis.vertical,
@@ -65,7 +67,7 @@ class _NoteItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //don't cause a ui rebuild
-    var note = Provider.of<NoteListModel>(context, listen: false).getByIndex(index);//provider pattern
+    var note = Provider.of<NoteListProvider>(context, listen: false).getByIndex(index);//provider pattern
 
     return InkWell(
       onTap: () => context.goNamed('note', extra: note),//parse extra object parameter
@@ -147,7 +149,7 @@ class _DeleteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomIconButton(icon: const Icon(Icons.delete,color: Colors.black,),
         onPressed: (){
-          var noteList = context.read<NoteListModel>();//provider pattern
+          var noteList = context.read<NoteListProvider>();//provider pattern
           noteList.remove(item);
         });
   }
@@ -163,7 +165,7 @@ class _PinButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomIconButton(icon: const Icon(Icons.push_pin,color: Colors.black,),
         onPressed: (){
-          var noteList = context.read<NoteListModel>();//provider pattern
+          var noteList = context.read<NoteListProvider>();//provider pattern
           noteList.pinOrUnpin(item);
         });
   }
