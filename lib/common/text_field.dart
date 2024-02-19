@@ -1,6 +1,6 @@
-import 'package:diary/utils/constants.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import 'helpers.dart';
 
 class CustomTextField extends StatelessWidget{
   final TextInputType? keyboardType;
@@ -8,23 +8,27 @@ class CustomTextField extends StatelessWidget{
   final TextEditingController? controller;
   final bool isPassword;
   final String? Function(String?)? onValidate;
+  final bool isFilled;
 
-  CustomTextField({
+  const CustomTextField({
+    super.key, //key helps to preserve widget state when screen is rebuilt
     this.onValidate,
     this.hintText,
     this.controller,
     this.isPassword = false,
     this.keyboardType,
+    this.isFilled = true
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      keyboardType: keyboardType == null ? TextInputType.name : keyboardType,
+      keyboardType: keyboardType ?? TextInputType.name,
       validator: onValidate,
       obscureText: isPassword == false ? false : isPassword,
       controller: controller,
-      decoration: InputDecoration(
+      decoration: isFilled
+      ? InputDecoration(
         contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
         labelText: hintText ?? 'hint text...',
         labelStyle: getTextStyle(16),
@@ -59,6 +63,14 @@ class CustomTextField extends StatelessWidget{
                 color: primaryColor
             )
         ),
+      )
+      : InputDecoration(
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+        labelText: hintText ?? 'hint text...',
+        labelStyle: getTextStyle(16),
+        errorStyle: getTextStyle(10),
+        filled: false,
       ),
     );
   }
