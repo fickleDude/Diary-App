@@ -25,3 +25,4 @@ Widget getCover(String asset){
     ),
   );
 }
+

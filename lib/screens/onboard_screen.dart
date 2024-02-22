@@ -1,17 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:diary/common/form.dart';
 import 'package:diary/common/form_header.dart';
 
 import '../common/helpers.dart';
 
-class WelcomeScreen extends StatelessWidget{
+class OnBoardScreen extends StatelessWidget{
 
   late double screenWidth;
   late double screenHeight;
 
-  WelcomeScreen({super.key});
+  OnBoardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

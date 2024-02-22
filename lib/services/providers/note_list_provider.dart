@@ -1,6 +1,6 @@
-import 'package:diary/services/note_list_database.dart';
+import 'package:diary/services/data/note_list_database.dart';
 import 'package:flutter/foundation.dart';
-import '../models/note_model.dart';
+import '../../models/note_model.dart';
 
 class NoteListProvider extends ChangeNotifier {
   List<NoteModel> _noteList = [];

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:diary/common/appbar.dart';
 import 'package:diary/common/text_field.dart';
-import 'package:diary/services/note_list_provider.dart';
+import 'package:diary/services/providers/note_list_provider.dart';
 import 'package:diary/models/note_model.dart';
 import 'package:provider/provider.dart';
 

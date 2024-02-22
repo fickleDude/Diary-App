@@ -7,6 +7,10 @@ import 'package:diary/common/helpers.dart';
 import 'package:diary/common/text_button.dart';
 import 'package:diary/common/text_field.dart';
 
+import '../common/custom_dialog.dart';
+import '../services/auth_ecxeption_handler.dart';
+import '../services/auth_helper.dart';
+
 class RegisterForm extends StatefulWidget{
   const RegisterForm({super.key});
 
@@ -27,6 +31,19 @@ class _RegisterFormState extends State<RegisterForm> {
 
   final _formKey = GlobalKey<FormState>();
 
+  final _authService = AuthHelper.auth;
+
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    super.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _repasswordController.dispose();
+  }
+
   //UI
   @override
   Widget build(BuildContext context) {
@@ -42,7 +59,9 @@ class _RegisterFormState extends State<RegisterForm> {
           body: Stack(
             children: [
               getCover("assets/background/register.jpg"),
-              SingleChildScrollView(
+              isLoading
+              ?const Center(child: CircularProgressIndicator(color: Colors.black,))
+              : SingleChildScrollView(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -119,11 +138,8 @@ class _RegisterFormState extends State<RegisterForm> {
                               height: screenHeight / 16,
                               width: screenWidth / 1.2,
                               label: 'REGISTER',
-                              onPressed: (){
-                                if(_formKey.currentState!.validate()){
-                                  _register();
-                                  context.go('/welcome');
-                                }
+                              onPressed: () async{
+                                _register();
                               },),
                           ]
                       ),
@@ -140,7 +156,23 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   //LOGIC
-  void _register(){
-    //add implementation (provider pattern)
+  void _register() async{
+    setState(() { isLoading = true; });
+    if(_formKey.currentState!.validate()){
+      final status = await _authService.register(
+          _emailController.text,
+          _passwordController.text,
+          _usernameController.text).whenComplete((){
+        setState(() { isLoading = false; });
+      });
+      if (status == AuthStatus.successful) {
+        context.go('/welcome/login');
+      } else {
+        showDialog(context: context,
+            builder: (context) => CustomDialog(
+                title: "ERROR",
+                content: AuthExceptionHandler.generateErrorMessage(status)));
+      }
+    }
   }
 }

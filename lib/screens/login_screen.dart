@@ -1,3 +1,6 @@
+import 'package:diary/common/custom_dialog.dart';
+import 'package:diary/services/auth_ecxeption_handler.dart';
+import 'package:diary/services/auth_helper.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -7,15 +10,15 @@ import '../common/helpers.dart';
 import '../common/text_button.dart';
 import '../common/text_field.dart';
 
-class LoginForm extends StatefulWidget{
-  const LoginForm({super.key});
+class LoginScreen extends StatefulWidget{
+  const LoginScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _LoginFormState();
+  State<StatefulWidget> createState() => _LoginScreenState();
 }
 
 
-class _LoginFormState extends State<LoginForm> {
+class _LoginScreenState extends State<LoginScreen> {
 
   late double screenHeight;
   late double screenWidth;
@@ -24,6 +27,17 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _passwordController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+
+  final _authService = AuthHelper.auth;
+
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    super.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+  }
 
   //UI
   @override
@@ -37,7 +51,9 @@ class _LoginFormState extends State<LoginForm> {
                 body: Stack(
                   children:[
                     getCover("assets/background/login.jpg"),
-                    SingleChildScrollView(
+                    isLoading
+                    ? const Center(child: CircularProgressIndicator(color: Colors.black,))
+                    : SingleChildScrollView(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -83,11 +99,8 @@ class _LoginFormState extends State<LoginForm> {
                                     height: screenHeight / 16,
                                     width: screenWidth / 1.2,
                                     label: 'LOG IN',
-                                    onPressed: (){
-                                      if(_formKey.currentState!.validate()){
-                                        _login();
-                                        context.go('/main');
-                                      }
+                                    onPressed: () async{
+                                      _login();
                                     },),
                                 ]
                             ),
@@ -117,12 +130,32 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   //LOGIC
-  void _login(){
-      //add implementation (provider pattern)
+  void _login() async{
+    setState(() { isLoading = true; });
+    if(_formKey.currentState!.validate()){
+      final status = await _authService.login(
+          _emailController.text,
+          _passwordController.text).whenComplete((){
+        setState(() { isLoading = false; });
+      });
+      if (status == AuthStatus.successful) {
+        context.go('/home');
+      } else {
+        showDialog(context: context,
+              builder: (context) => CustomDialog(
+                  title: "ERROR",
+                  content: AuthExceptionHandler.generateErrorMessage(status)));
+      }
+    }
   }
 
-  void _resetPassword(){
-      //add implementation (provider pattern)
+
+  void _resetPassword() async{
+    final status = await _authService.resetPassword(_emailController.text);
+    showDialog(context: context,
+        builder: (context) => CustomDialog(
+            title: "CHANGE PASSWORD",
+            content: AuthExceptionHandler.generateErrorMessage(status)));
   }
 }
 

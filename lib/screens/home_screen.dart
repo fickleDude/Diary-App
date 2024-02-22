@@ -4,7 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:diary/common/appbar.dart';
 import 'package:diary/common/helpers.dart';
 
-class MainScreen extends StatelessWidget{
+import '../services/auth_helper.dart';
+
+class HomeScreen extends StatelessWidget{
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,6 +25,9 @@ class MainScreen extends StatelessWidget{
 }
 
 class _Menu extends StatelessWidget{
+
+  final _authService = AuthHelper.auth;
+
   @override
   Widget build(BuildContext context) {
     return Drawer(

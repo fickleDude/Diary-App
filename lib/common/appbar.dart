@@ -1,3 +1,4 @@
+import 'package:diary/services/auth_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,7 +16,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
       actions: [
         IconButton(
           icon: const Icon(Icons.logout, color: Colors.black,),
-          onPressed: () => context.go('/login')
+          onPressed: () async{
+            await _logout().then((value)
+            => context.go('/welcome/login'));
+        }
         ),
       ],
       backgroundColor: backgroundPink,
@@ -24,4 +28,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
 
   @override
   Size get preferredSize => Size.fromHeight(height);
+
+  Future<void> _logout() async{
+    await AuthHelper.auth.logout();
+  }
 }

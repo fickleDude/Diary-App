@@ -43,6 +43,9 @@ dependencies:
   sqflite: ^2.3.2
   #helps to specify the location of the file that contains the database
   path: ^1.8.3
+  #firebase
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
 
 dev_dependencies:
   flutter_test:

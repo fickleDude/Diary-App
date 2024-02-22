@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:diary/common/appbar.dart';
 import 'package:diary/common/helpers.dart';
 import 'package:diary/common/icon_button.dart';
-import 'package:diary/services/note_list_provider.dart';
+import 'package:diary/services/providers/note_list_provider.dart';
 import 'package:diary/models/note_model.dart';
 import 'package:provider/provider.dart';
 

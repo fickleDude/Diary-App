@@ -32,12 +32,12 @@ class DatabaseHelper {
         "body TEXT,"
         "isPinned INTEGER);";
 
-    String userTable = "CREATE TABLE User("
-        "id INTEGER PRIMARY KEY,"
-        "userId TEXT,"
-        "title TEXT,"
-        "body TEXT,"
-        "isPinned INTEGER);";
+    // String userTable = "CREATE TABLE User("
+    //     "id INTEGER PRIMARY KEY,"
+    //     "userId TEXT,"
+    //     "title TEXT,"
+    //     "body TEXT,"
+    //     "isPinned INTEGER);";
 
     //GET DATABASE PATH
     String defaultPath = await getDatabasesPath();//get the default database location

@@ -1,7 +1,7 @@
 import 'package:diary/services/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../models/note_model.dart';
+import '../../models/note_model.dart';
 
 //crud for note table
 class NoteListDatabase{
