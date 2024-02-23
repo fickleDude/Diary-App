@@ -4,6 +4,10 @@ Color backgroundPurple = Color(0xFFB8A8C2);
 Color backgroundPink = Color(0xB2BB9AA0);
 Color primaryColor = Color(0xFFE2DCDC);
 
+String userKey = "userInfo";
+String isStoredKey = "isUserStored";
+
+
 TextStyle getTextStyle(double size, [Color color = Colors.black, FontWeight fontWeight = FontWeight.bold] ) {
   return TextStyle(
     color: color,

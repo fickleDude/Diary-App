@@ -1,6 +1,8 @@
 import 'package:diary/services/auth_helper.dart';
+import 'package:diary/services/providers/app_user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import 'helpers.dart';
 
@@ -17,8 +19,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
         IconButton(
           icon: const Icon(Icons.logout, color: Colors.black,),
           onPressed: () async{
-            await _logout().then((value)
-            => context.go('/welcome/login'));
+            await AuthHelper.auth.logout().whenComplete(() async {
+              // set userinfo to null, will rebuild the consumer in main.dart
+              context.read<AppUserProvider>().logout();
+
+              // then clear the user info from local storage
+              final preferences = await SharedPreferences.getInstance();
+              await preferences.remove(userKey);
+            });
         }
         ),
       ],
@@ -28,8 +36,4 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
 
   @override
   Size get preferredSize => Size.fromHeight(height);
-
-  Future<void> _logout() async{
-    await AuthHelper.auth.logout();
-  }
 }

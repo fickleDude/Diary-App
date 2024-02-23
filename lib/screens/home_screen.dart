@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:diary/common/appbar.dart';
 import 'package:diary/common/helpers.dart';
 
-import '../services/auth_helper.dart';
-
 class HomeScreen extends StatelessWidget{
   const HomeScreen({super.key});
 
@@ -25,8 +23,6 @@ class HomeScreen extends StatelessWidget{
 }
 
 class _Menu extends StatelessWidget{
-
-  final _authService = AuthHelper.auth;
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +44,12 @@ class _Menu extends StatelessWidget{
           ListTile(
             leading: Icon(Icons.person),
             title: Text('PROFILE'),
-            onTap: null,
+            onTap: () => context.go('/home/profile'),
           ),
           ListTile(
             leading: Icon(Icons.note_add_rounded),
             title: Text('MY NOTES'),
-            onTap: () => context.go('/main/note_list'),
+            onTap: () => context.go('/home/note_list'),
           ),
           ListTile(
             leading: Icon(Icons.notification_add_rounded),

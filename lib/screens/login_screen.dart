@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:diary/common/custom_dialog.dart';
+import 'package:diary/models/user_model.dart';
 import 'package:diary/services/auth_ecxeption_handler.dart';
 import 'package:diary/services/auth_helper.dart';
+import 'package:diary/services/providers/app_user_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../common/form.dart';
 import '../common/form_header.dart';
 import '../common/helpers.dart';
@@ -131,6 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   //LOGIC
   void _login() async{
+    //show splash screen while login
     setState(() { isLoading = true; });
     if(_formKey.currentState!.validate()){
       final status = await _authService.login(
@@ -139,7 +146,19 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() { isLoading = false; });
       });
       if (status == AuthStatus.successful) {
-        context.go('/home');
+        // set userinfo if sucess login.
+        // this will rebuild the consumer in main.dart
+        // and navigate to homescreen
+        User currentUser = _authService.getCurrentUser()!;
+        AppUserModel userToStore = AppUserModel(
+            id: currentUser.uid,
+            name: currentUser.displayName,
+            email: currentUser.email
+        );
+        context.read<AppUserProvider>().user = userToStore;
+        // then save the user info
+        final preferences= await SharedPreferences.getInstance();
+        await preferences.setString(userKey, AppUserModel.userToJson(userToStore));
       } else {
         showDialog(context: context,
               builder: (context) => CustomDialog(

@@ -53,7 +53,7 @@ class _LogInButton extends StatelessWidget{
       heroTag: null,
       backgroundColor: backgroundPink,
       shape: const CircleBorder(),
-      onPressed: (){
+      onPressed: () async{
         context.go('/welcome/login');
       },
       child: const Icon(Icons.login_rounded, color: Colors.black),);

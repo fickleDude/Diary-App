@@ -1,4 +1,4 @@
-import 'package:flutter/gestures.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:diary/common/form.dart';
@@ -166,6 +166,9 @@ class _RegisterFormState extends State<RegisterForm> {
         setState(() { isLoading = false; });
       });
       if (status == AuthStatus.successful) {
+        //never show on boarding screen again
+        final preferences= await SharedPreferences.getInstance();
+        await preferences.setBool(isStoredKey, true);
         context.go('/welcome/login');
       } else {
         showDialog(context: context,

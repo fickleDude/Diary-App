@@ -61,4 +61,8 @@ class AuthHelper {
     });
     return isAuth;
   }
+
+  User? getCurrentUser(){
+    return _authInstance!.currentUser;
+  }
 }
